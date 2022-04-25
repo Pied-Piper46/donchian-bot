@@ -64,14 +64,14 @@ def buy_signal(data, last_data, flag):
 
     return flag
 
-#
+# Fuction to place a selling market order to close when there is a signal to close
 def close_position(data, last_data, flag):
     if data["close_price"] < last_data["close_price"]:
         print("")
         flag["position"] = False
     return flag
 
-# 
+# Function to check if an order submitted to the server has been executed
 def check_order(flag):
     flag["order"] = False
     flag["position"] = True
@@ -106,5 +106,5 @@ while i < 1000:
         last_data["open_price"] = data["open_price"]
         last_data["clese_price"] = data["close_price"]
         i += 1
-        
+
     time.sleep(0)
