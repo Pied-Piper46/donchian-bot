@@ -1,16 +1,13 @@
 import requests
 from datetime import datetime
 import time
-import ccxt
 
-bitflyer = ccxt.bitflyer()
-bitflyer.apiKey = 'GvHNvbfYPBjwj7hHnmcTk7'
-bitflyer.secret = 'zmrcGPEeaWbBrG2klfO2LZIMbAolzvCKrBVMV0vESjQ='
+response = requests.get("https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc", params={"periods": 60})
 
 # Get the i price for any time chart from Cryptowatch
 def get_price(minutes, i):
-    response = requests.get("https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc", params={"periods": minutes})
     data = response.json()
+    print(data)
     # print(len(data['result'][str(minutes)])) # -> 1000 (1000 data in one request)
 
     return {"close_time" : data["result"][str(minutes)][i][0],
@@ -78,15 +75,10 @@ def buy_signal(price_data, last_data, flag):
         print("Place a buying limit order for " + str(price_data["close_price"]) + " ! (3 consecutive white candlestick)")
         flag["buy_signal"] = 3
 
-        # buy
-        order = bitflyer.create_order(
-            symbol = 'BTC/JPY',
-            type = 'limit',
-            side = 'buy',
-            price = price_data["close_price"],
-            amount = '0.001',
-            params = {"product_code": "BTC_JPY"}
-        )
+        # order
+        #
+        #
+
         flag["order"]["exist"] = True
         flag["order"]["side"] = "BUY"
     else:
@@ -104,14 +96,10 @@ def sell_signal(price_data, last_data, flag):
         print("Place a selling limit order for " + str(price_data["close_price"]) + " ! (3 consecutive black candlestick)")
         flag["sell_signal"] = 3
 
-        order = bitflyer.create_order(
-            symbol = 'BTC/JPY',
-            type = 'limit',
-            side = 'sell',
-            price = price_data["close_price"],
-            amount = '0.001',
-            params = {"product_code": "BTC_JPY"}
-        )
+        # order
+        #
+        #
+
         flag["order"]["exist"] = True
         flag["order"]["side"] = "SELL"
     else:
@@ -124,102 +112,62 @@ def close_position(price_data, last_data, flag):
     if flag["position"]["side"] == "BUY":
         if price_data["close_price"] < last_data["close_price"]:
             print("Because of under the previous close price, place a market order to close it at around " + str(price_data["close_price"]) + " yen.")
-            order = bitflyer.create_order(
-                symbol = 'BTC/JPY',
-                type = 'market',
-                side = 'sell',
-                amount = '0.001',
-                params = {"product_code": "BtC_JPY"}
-            )
-            flag["position"]["exist"] = False
 
+            # order
+            #
+
+            flag["position"]["exist"] = False
+    
     if flag["position"]["side"] == "SELL":
         if price_data["close_price"] > last_data["close_price"]:
             print("Because of exceeding the previous close price, place a market order to close it at around " + str(price_data["close_price"]) + " yen.")
-            order = bitflyer.create_order(
-                symbol = 'BTC/JPY',
-                type = 'market',
-                side = 'buy',
-                amount = '0.001',
-                params = {"product_code": "BtC_JPY"}
-            )
+
+            # order
+            #
+
             flag["position"]["exist"] = False
 
     return flag
 
 # Function to check if an order submitted to the server has been executed
 def check_order(flag):
-    position = bitflyer.private_get_getpositions(params = {"product_code": "BTC_JPY"})
-    orders = bitflyer.fetch_open_orders(
-        symbol = "BTC/JPY",
-        params = {"product_code": "BTC_JPY"}
-    )
+    # check
+    #
 
-    if position:
-        print("Execution of your order!")
-        flag["order"]["exist"] = False
-        flag["order"]["count"] = 0
-        flag["position"]["exist"] = True
-        flag["position"]["side"] = flag["order"]["side"]
-    else:
-        if orders:
-            print("There are stll existing orders")
-            for o in orders:
-                print(o["id"])
-            flag["order"]["count"] += 1
-            if flag["order"]["count"] > 6:
-                flag = cancel_order(orders, flag)
-        else:
-            print("Orders seem to be delayed.")
+    flag["order"]["exist"] = False
+    flag["position"]["exist"] = True
     return flag
 
 # Function to cancel orders
 def cancel_order(orders, flag):
-    for o in orders:
-        bitflyer.cancel_order(
-            symbol = "BTC/JPY",
-            id = o["id"],
-            params = {"product_code": BTC_JPY}
-        )
-    print("Cancel the orders which is not executed.")
-    flag["order"]["count"] = 0
-    flag["order"]["exist"] = False
-
-    time.sleep(20)
-    position = bitflyer.private_get_getpositions(params = {"product_code": "BTC_JPY"})
-    if not position:
-        print("There are no orders which is not executed now.")
-    else:
-        print("There are orders which is not executed now.")
-        flag["position"]["exist"] = True
-        flag["position"]["side"] = position[0]["side"]
-    return flag
+    return True
 
 # main
 def main():
-    last_data = get_price(60, -2)
+    last_data = get_price(60, 0)
     print_price(last_data)
-    time.sleep(10)
 
     flag = {
         "buy_signal": 0,
         "sell_signal": 0,
         "order": {
-            "exist" : False,
-            "side" : "",
-            "count" : 0
+            "exist": False,
+            "side": "",
+            "count": 0
         },
         "position": {
-            "exist" : False,
-            "side" : ""
+            "exist": False,
+            "side": ""
         }
     }
 
-    while True:
+    i = 1
+
+    while i < 1000:
         if flag["order"]["exist"]:
             flag = check_order(flag)
 
-        price_data = get_price(60, -2)
+        price_data = get_price(60, i)
 
         if price_data["close_time"] != last_data["close_time"]:
             print_price(price_data)
@@ -233,9 +181,11 @@ def main():
             last_data["close_time"] = price_data["close_time"]
             last_data["open_price"] = price_data["open_price"]
             last_data["clese_price"] = price_data["close_price"]
+            i += 1
 
-        time.sleep(10)
+        time.sleep(0)
+
 
 if __name__ == '__main__':
-    main()
-    # get_price(60, -2)
+    # main()
+    get_price(60, -2)
