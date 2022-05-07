@@ -9,15 +9,23 @@ bitflyer.secret = 'zmrcGPEeaWbBrG2klfO2LZIMbAolzvCKrBVMV0vESjQ='
 
 # Get the i price for any time chart from Cryptowatch
 def get_price(minutes, i):
-    response = requests.get("https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc", params={"periods": minutes})
-    data = response.json()
-    # print(len(data['result'][str(minutes)])) # -> 1000 (1000 data in one request)
+    while True:
+        try:
+            response = requests.get("https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc", params={"periods": minutes}, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            # print(len(data['result'][str(minutes)])) # -> 1000 (1000 data per one request)
 
-    return {"close_time" : data["result"][str(minutes)][i][0],
-            "open_price" : data["result"][str(minutes)][i][1],
-            "high_price" : data["result"][str(minutes)][i][2],
-            "low_price" : data["result"][str(minutes)][i][3],
-            "close_price" : data["result"][str(minutes)][i][4]}
+            return {"close_time" : data["result"][str(minutes)][i][0],
+                    "open_price" : data["result"][str(minutes)][i][1],
+                    "high_price" : data["result"][str(minutes)][i][2],
+                    "low_price" : data["result"][str(minutes)][i][3],
+                    "close_price" : data["result"][str(minutes)][i][4]}
+
+        except requests.exceptions.RequestException as e:
+            print("Error! Can not get price data from Cryptowatch : ", e)
+            print("Wait 10 seconds and redo it.")
+            time.sleep(10)
 
 # Print a close time, an open price and a close price
 def print_price(price_data):
@@ -77,18 +85,22 @@ def buy_signal(price_data, last_data, flag):
     elif flag["buy_signal"] == 2 and check_candle(price_data, "buy") and check_ascend(price_data, last_data):
         print("Place a buying limit order for " + str(price_data["close_price"]) + " ! (3 consecutive white candlestick)")
         flag["buy_signal"] = 3
-
         # buy
-        order = bitflyer.create_order(
-            symbol = 'BTC/JPY',
-            type = 'limit',
-            side = 'buy',
-            price = price_data["close_price"],
-            amount = '0.001',
-            params = {"product_code": "BTC_JPY"}
-        )
-        flag["order"]["exist"] = True
-        flag["order"]["side"] = "BUY"
+        try:
+            order = bitflyer.create_order(
+                symbol = 'BTC/JPY',
+                type = 'limit',
+                side = 'buy',
+                price = price_data["close_price"],
+                amount = '0.001',
+                params = {"product_code": "BTC_JPY"}
+            )
+            flag["order"]["exist"] = True
+            flag["order"]["side"] = "BUY"
+        except ccxt.BaseError as e:
+            print("Error! In order API of Bitflyer", e)
+            print("Order failed.")
+
     else:
         flag["buy_signal"] = 0
 
@@ -104,16 +116,22 @@ def sell_signal(price_data, last_data, flag):
         print("Place a selling limit order for " + str(price_data["close_price"]) + " ! (3 consecutive black candlestick)")
         flag["sell_signal"] = 3
 
-        order = bitflyer.create_order(
-            symbol = 'BTC/JPY',
-            type = 'limit',
-            side = 'sell',
-            price = price_data["close_price"],
-            amount = '0.001',
-            params = {"product_code": "BTC_JPY"}
-        )
-        flag["order"]["exist"] = True
-        flag["order"]["side"] = "SELL"
+        try:
+            order = bitflyer.create_order(
+                symbol = 'BTC/JPY',
+                type = 'limit',
+                side = 'sell',
+                price = price_data["close_price"],
+                amount = '0.001',
+                params = {"product_code": "BTC_JPY"}
+            )
+            flag["order"]["exist"] = True
+            flag["order"]["side"] = "SELL"
+            time.sleep(30)
+        except ccxt.BaseError as e:
+            print("Error! In order API of Bitflyer", e)
+            print("Order failed.")
+
     else:
         flag["sell_signal"] = 0
     
@@ -124,76 +142,101 @@ def close_position(price_data, last_data, flag):
     if flag["position"]["side"] == "BUY":
         if price_data["close_price"] < last_data["close_price"]:
             print("Because of under the previous close price, place a market order to close it at around " + str(price_data["close_price"]) + " yen.")
-            order = bitflyer.create_order(
-                symbol = 'BTC/JPY',
-                type = 'market',
-                side = 'sell',
-                amount = '0.001',
-                params = {"product_code": "BtC_JPY"}
-            )
-            flag["position"]["exist"] = False
+            
+            while True:
+                try:
+                    order = bitflyer.create_order(
+                        symbol = 'BTC/JPY',
+                        type = 'market',
+                        side = 'sell',
+                        amount = '0.001',
+                        params = {"product_code": "BtC_JPY"}
+                    )
+                    flag["position"]["exist"] = False
+                    time.sleep(30)
+                    break
+                except ccxt.BaseError as e:
+                    print("Error! In order API of Bitflyer", e)
+                    print("Order failed. I will try again in 30 seconds.")
+                    time.sleep(30)
 
     if flag["position"]["side"] == "SELL":
         if price_data["close_price"] > last_data["close_price"]:
             print("Because of exceeding the previous close price, place a market order to close it at around " + str(price_data["close_price"]) + " yen.")
-            order = bitflyer.create_order(
-                symbol = 'BTC/JPY',
-                type = 'market',
-                side = 'buy',
-                amount = '0.001',
-                params = {"product_code": "BtC_JPY"}
-            )
-            flag["position"]["exist"] = False
+
+            while True:
+                try:
+                    order = bitflyer.create_order(
+                        symbol = 'BTC/JPY',
+                        type = 'market',
+                        side = 'buy',
+                        amount = '0.001',
+                        params = {"product_code": "BtC_JPY"}
+                    )
+                    flag["position"]["exist"] = False
+                    time.sleep(30)
+                    break
+                except ccxt.BaseError as e:
+                    print("Error! In order API of Bitflyer", e)
+                    print("Order failed. I will try again in 30 seconds.")
+                    time.sleep(30)
 
     return flag
 
 # Function to check if an order submitted to the server has been executed
 def check_order(flag):
-    position = bitflyer.private_get_getpositions(params = {"product_code": "BTC_JPY"})
-    orders = bitflyer.fetch_open_orders(
-        symbol = "BTC/JPY",
-        params = {"product_code": "BTC_JPY"}
-    )
-
-    if position:
-        print("Execution of your order!")
-        flag["order"]["exist"] = False
-        flag["order"]["count"] = 0
-        flag["position"]["exist"] = True
-        flag["position"]["side"] = flag["order"]["side"]
+    try:
+        position = bitflyer.private_get_getpositions(params = {"product_code": "BTC_JPY"})
+        orders = bitflyer.fetch_open_orders(
+            symbol = "BTC/JPY",
+            params = {"product_code": "BTC_JPY"}
+        )
+    except ccxt.BaseError as e:
+        print("Error! In Bitflyer API : ", e)
     else:
-        if orders:
-            print("There are stll existing orders")
-            for o in orders:
-                print(o["id"])
-            flag["order"]["count"] += 1
-            if flag["order"]["count"] > 6:
-                flag = cancel_order(orders, flag)
+        if position:
+            print("Execution of your order!")
+            flag["order"]["exist"] = False
+            flag["order"]["count"] = 0
+            flag["position"]["exist"] = True
+            flag["position"]["side"] = flag["order"]["side"]
         else:
-            print("Orders seem to be delayed.")
+            if orders:
+                print("There are stll existing orders")
+                for o in orders:
+                    print(o["id"])
+                flag["order"]["count"] += 1
+                if flag["order"]["count"] > 6:
+                    flag = cancel_order(orders, flag)
+            else:
+                print("Orders seem to be delayed.")
     return flag
 
 # Function to cancel orders
 def cancel_order(orders, flag):
-    for o in orders:
-        bitflyer.cancel_order(
-            symbol = "BTC/JPY",
-            id = o["id"],
-            params = {"product_code": BTC_JPY}
-        )
-    print("Cancel the orders which is not executed.")
-    flag["order"]["count"] = 0
-    flag["order"]["exist"] = False
+    try:
+        for o in orders:
+            bitflyer.cancel_order(
+                symbol = "BTC/JPY",
+                id = o["id"],
+                params = {"product_code": BTC_JPY}
+            )
+        print("Cancel the orders which is not executed.")
+        flag["order"]["count"] = 0
+        flag["order"]["exist"] = False
 
-    time.sleep(20)
-    position = bitflyer.private_get_getpositions(params = {"product_code": "BTC_JPY"})
-    if not position:
-        print("There are no orders which is not executed now.")
-    else:
-        print("There are orders which is not executed now.")
-        flag["position"]["exist"] = True
-        flag["position"]["side"] = position[0]["side"]
-    return flag
+        time.sleep(20)
+        position = bitflyer.private_get_getpositions(params = {"product_code": "BTC_JPY"})
+        if not position:
+            print("There are no orders which is not executed now.")
+        else:
+            print("There are orders which is not executed now.")
+            flag["position"]["exist"] = True
+            flag["position"]["side"] = position[0]["side"]
+    except ccxt.BaseError as e:
+        print("Error! In Bitflyer API : ", e)
+    finally:
+        return flag
 
 # main
 def main():
