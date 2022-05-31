@@ -4,10 +4,9 @@ import time
 
 response = requests.get("https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc", params={"periods": 60})
 
-# Get the i price for any time chart from Cryptowatch
+# Get the i price data (OHLC) for any time chart from Cryptowatch
 def get_price(minutes, i):
     data = response.json()
-    print(data)
     # print(len(data['result'][str(minutes)])) # -> 1000 (1000 data in one request)
 
     return {"close_time" : data["result"][str(minutes)][i][0],
@@ -19,7 +18,7 @@ def get_price(minutes, i):
 # Print a close time, an open price and a close price
 def print_price(price_data):
     close_time_str = datetime.fromtimestamp(price_data["close_time"]).strftime('%Y/%m/%d %H:%M')
-    print("時間: " + close_time_str + " 始値: " + str(price_data["open_price"]) + " 終値: " + str(price_data["close_price"]))
+    print("Time: " + close_time_str + " | Open price: " + str(price_data["open_price"]) + " | Close price: " + str(price_data["close_price"]))
 
 # Fuction to check if each candlestick meets the condition for entry (white and black candlestick)
 def check_candle(price_data, side):
@@ -75,12 +74,10 @@ def buy_signal(price_data, last_data, flag):
         print("Place a buying limit order for " + str(price_data["close_price"]) + " ! (3 consecutive white candlestick)")
         flag["buy_signal"] = 3
 
-        # order
-        #
-        #
-
+        # write order function
         flag["order"]["exist"] = True
         flag["order"]["side"] = "BUY"
+
     else:
         flag["buy_signal"] = 0
 
@@ -96,10 +93,7 @@ def sell_signal(price_data, last_data, flag):
         print("Place a selling limit order for " + str(price_data["close_price"]) + " ! (3 consecutive black candlestick)")
         flag["sell_signal"] = 3
 
-        # order
-        #
-        #
-
+        ### write order function ###
         flag["order"]["exist"] = True
         flag["order"]["side"] = "SELL"
     else:
@@ -113,34 +107,31 @@ def close_position(price_data, last_data, flag):
         if price_data["close_price"] < last_data["close_price"]:
             print("Because of under the previous close price, place a market order to close it at around " + str(price_data["close_price"]) + " yen.")
 
-            # order
-            #
-
+            ### write order function ###
             flag["position"]["exist"] = False
     
     if flag["position"]["side"] == "SELL":
         if price_data["close_price"] > last_data["close_price"]:
             print("Because of exceeding the previous close price, place a market order to close it at around " + str(price_data["close_price"]) + " yen.")
 
-            # order
-            #
-
+            ### write order function ###
             flag["position"]["exist"] = False
 
     return flag
 
 # Function to check if an order submitted to the server has been executed
 def check_order(flag):
-    # check
-    #
-
+    
+    ### write check function ###
     flag["order"]["exist"] = False
+    flag["order"]["count"] = 0
     flag["position"]["exist"] = True
+    flag["position"]["side"] = flag["order"]["side"]
     return flag
 
-# Function to cancel orders
-def cancel_order(orders, flag):
-    return True
+# # Function to cancel orders
+# def cancel_order(orders, flag):
+#     return True
 
 # main
 def main():
@@ -168,24 +159,20 @@ def main():
             flag = check_order(flag)
 
         price_data = get_price(60, i)
+        print_price(price_data)
 
-        if price_data["close_time"] != last_data["close_time"]:
-            print_price(price_data)
-            
-            if flag["position"]["exist"]:
+        if flag["position"]["exist"]:
                 flag = close_position(price_data, last_data, flag)
-            else:
-                flag = buy_signal(price_data, last_data, flag)
-                flag = sell_signal(price_data, last_data, flag)
+        else:
+            flag = buy_signal(price_data, last_data, flag)
+            flag = sell_signal(price_data, last_data, flag)
 
-            last_data["close_time"] = price_data["close_time"]
-            last_data["open_price"] = price_data["open_price"]
-            last_data["clese_price"] = price_data["close_price"]
-            i += 1
-
-        time.sleep(0)
+        last_data["close_time"] = price_data["close_time"]
+        last_data["open_price"] = price_data["open_price"]
+        last_data["clese_price"] = price_data["close_price"]
+        i += 1
 
 
 if __name__ == '__main__':
-    # main()
-    get_price(60, -2)
+    main()
+    # get_price(60, -2)
