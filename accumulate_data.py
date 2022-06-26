@@ -4,6 +4,11 @@ import time
 import json
 import pprint
 
+import send_email
+to_address = "batman.btm.00@gmail.com"
+from_address = "batman.btm.00@gmail.com"
+subject = "Accumulate Data"
+
 chart_sec = 60 # candle stick of 1 minite
 file_path = "./test.json"
 URL = "https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc"
@@ -22,8 +27,9 @@ def accumulate_data(min, file_path, before=0, after=0):
     data = response.json()
 
     # write data to file
-    f = open(file_path, "w", encoding="utf-8")
-    json.dump(data, f)
+    # f = open(file_path, "w", encoding="utf-8")
+    # json.dump(data, f)
+    # print(len(data["result"][str(min)])) # 6000
 
     return data
 
@@ -53,17 +59,20 @@ def accumulate_diff_data(min, read_path, save_path, before=0, after=0):
 
     # add diff
     if len(diff_data) != 0:
-        print(f"There are {len(diff_data)} diff data")
         diff_data.sort(key=lambda x:x[0])
         f_data["result"][str(min)].extend(diff_data)
-        pprint.pprint(diff_data)
+        # pprint.pprint(diff_data)
+        print(f"There are {len(diff_data)} diff data")
 
     # write data to file
     f = open(save_path, "w", encoding="utf-8")
     json.dump(f_data, f)
 
-    return f_data
+    # send the email
+    msg = "Hello yuji. I accumulated " + str(len(diff_data)) + " diff data."
+    send_email.send_email(subject, msg, from_address, to_address)
 
+    return f_data
 
 
 # accumulate_data(chart_sec, file_path, after=1483228800)
