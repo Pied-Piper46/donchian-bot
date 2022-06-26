@@ -1,0 +1,5 @@
+test.py
+.python-version
+.ipynb_checkpoints/
+.DS_Store
+__pycache__

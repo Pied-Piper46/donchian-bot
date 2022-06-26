@@ -5,8 +5,7 @@ import json
 import pprint
 
 import send_email
-to_address = "batman.btm.00@gmail.com"
-from_address = "batman.btm.00@gmail.com"
+email_address = "batman.btm.00@gmail.com"
 subject = "Accumulate Data"
 
 chart_sec = 60 # candle stick of 1 minite
@@ -69,8 +68,10 @@ def accumulate_diff_data(min, read_path, save_path, before=0, after=0):
     json.dump(f_data, f)
 
     # send the email
-    msg = "Hello yuji. I accumulated " + str(len(diff_data)) + " diff data."
-    send_email.send_email(subject, msg, from_address, to_address)
+    dt = datetime.today()
+    msg_body = "Hi yuji.\n\n I accumulated " + str(len(diff_data)) + " diff data.\n" + str(dt) + "\n\nBest regard,\nBatman"
+
+    send_email.send_email(subject, msg_body, email_address, email_address)
 
     return f_data
 
