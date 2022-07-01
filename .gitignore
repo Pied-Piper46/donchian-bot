@@ -3,3 +3,4 @@ test.py
 .ipynb_checkpoints/
 .DS_Store
 __pycache__
+log/

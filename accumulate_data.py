@@ -4,9 +4,13 @@ import time
 import json
 import pprint
 
-import send_email
-email_address = "batman.btm.00@gmail.com"
-subject = "Accumulate Data"
+import logging
+formatter = '%(asctime)s : %(levelname)s : %(message)s'
+logging.basicConfig(format=formatter, level=logging.INFO)
+logger = logging.getLogger(__name__)
+handler = logging.FileHandler('log/console.log')
+handler.setFormatter(logging.Formatter(formatter))
+logger.addHandler(handler)
 
 chart_sec = 60 # candle stick of 1 minite
 file_path = "./test.json"
@@ -67,11 +71,8 @@ def accumulate_diff_data(min, read_path, save_path, before=0, after=0):
     f = open(save_path, "w", encoding="utf-8")
     json.dump(f_data, f)
 
-    # send the email
-    dt = datetime.today()
-    msg_body = "Hi yuji.\n\n I accumulated " + str(len(diff_data)) + " diff data.\n" + str(dt) + "\n\nBest regard,\nBatman"
-
-    send_email.send_email(subject, msg_body, email_address, email_address)
+    # create log
+    logger.info("Accumulated " + str(len(diff_data)) + " diff data.")
 
     return f_data
 
