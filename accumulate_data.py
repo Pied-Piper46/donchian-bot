@@ -12,6 +12,7 @@ handler = logging.FileHandler('log/console.log')
 handler.setFormatter(logging.Formatter(formatter))
 logger.addHandler(handler)
 
+
 chart_sec = 60 # candle stick of 1 minite
 file_path = "./test.json"
 URL = "https://api.cryptowat.ch/markets/bitflyer/btcjpy/ohlc"
@@ -30,9 +31,9 @@ def accumulate_data(min, file_path, before=0, after=0):
     data = response.json()
 
     # write data to file
-    # f = open(file_path, "w", encoding="utf-8")
-    # json.dump(data, f)
-    # print(len(data["result"][str(min)])) # 6000
+    f = open(file_path, "w", encoding="utf-8")
+    json.dump(data, f)
+    print(len(data["result"][str(min)])) # 6000
 
     return data
 
@@ -64,8 +65,6 @@ def accumulate_diff_data(min, read_path, save_path, before=0, after=0):
     if len(diff_data) != 0:
         diff_data.sort(key=lambda x:x[0])
         f_data["result"][str(min)].extend(diff_data)
-        # pprint.pprint(diff_data)
-        print(f"There are {len(diff_data)} diff data")
 
     # write data to file
     f = open(save_path, "w", encoding="utf-8")
