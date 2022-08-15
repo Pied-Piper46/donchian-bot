@@ -1,6 +1,5 @@
 # for simple backtest
 chart_sec = 3600
-wait = 0
 buy_term = 20
 sell_term = 20
 judge_price = {
