@@ -2,14 +2,11 @@
 get_price() : afterを指定しないとデフォルトで1000件までしか価格データ取れない。afterを指定すると最大6000件取れる。
 """
 
-
 import requests
 from datetime import datetime
 import time
 
-chart_sec = 3600
-term = 20
-wait = 0
+from params import *
 
 def get_price(min, before=0, after=0):
 
@@ -46,12 +43,12 @@ def print_price(data):
 
 def donchian(data, last_data):
 
-    highest = max(i["high_price"] for i in last_data)
-    if data["high_price"] > highest:
+    highest = max(i["high_price"] for i in last_data[(-1*buy_term): ])
+    if data[judge_price["BUY"]] > highest:
         return {"side": "BUY", "price": highest}
 
-    lowest = min(i["low_price"] for i in last_data)
-    if data["low_price"] < lowest:
+    lowest = min(i["low_price"] for i in last_data[(-1*sell_term): ])
+    if data[judge_price["SELL"]] < lowest:
         return {"side": "SELL", "price": lowest}
 
     return {"side": None, "price": 0}
@@ -61,7 +58,7 @@ def entry_signal(data, last_data, flag):
     
     signal = donchian(data, last_data)
     if signal["side"] == "BUY":
-        print(f"過去{term}足の最高値{signal['price']}円を、直近の高値が{data['high_price']}円でブレイクしました。")
+        print(f"過去{buy_term}足の最高値{signal['price']}円を、直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
         print(str(data["close_price"]) + "円で買いの指値注文を出します。")
 
         # ここに買い注文のコードを入れる
@@ -69,7 +66,7 @@ def entry_signal(data, last_data, flag):
         flag["order"]["side"] = "BUY"
 
     if signal["side"] == "SELL":
-        print(f"過去{term}足の最安値{signal['price']}円を、直近の安値が{data['low_price']}円でブレイクしました。")
+        print(f"過去{sell_term}足の最安値{signal['price']}円を、直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
         print(str(data["close_price"]) + "円で売りの指値注文を出します。")
 
         # ここに売り注文のコードを入れる
@@ -96,7 +93,7 @@ def close_position(data, last_data, flag):
 
     if flag["position"]["side"] == "BUY":
         if signal["side"] == "SELL":
-            print(f"過去{term}足の最安値{signal['price']}円を、直近の安値が{data['low_price']}円でブレイクしました。")
+            print(f"過去{sell_term}足の最安値{signal['price']}円を、直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
             print("成行注文を出してポジションを決済します。")
 
             # ここに決済の成行注文コードを入れる
@@ -111,7 +108,7 @@ def close_position(data, last_data, flag):
 
     if flag["position"]["side"] == "SELL":
         if signal["side"] == "BUY":
-            print(f"過去{term}足の最高値{signal['price']}円を、直近の高値が{data['high_price']}円でブレイクしました。")
+            print(f"過去{buy_term}足の最高値{signal['price']}円を、直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
             print("成行注文を出してポジションを決済します。")
 
             # ここに決済の成行注文コードを入れる
@@ -149,7 +146,7 @@ def main():
     i = 0
     while i < len(price):
 
-        if len(last_data) < term:
+        if len(last_data) < buy_term or len(last_data) < sell_term:
             last_data.append(price[i])
             print_price(price[i])
             time.sleep(wait)
@@ -166,10 +163,10 @@ def main():
         else:
             flag = entry_signal(data, last_data, flag)
 
-        del last_data[0]
         last_data.append(data)
         i += 1
         time.sleep(wait)
 
 if __name__ == '__main__':
+
     main()

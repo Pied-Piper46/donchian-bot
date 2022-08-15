@@ -6,13 +6,7 @@ import time
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
-chart_sec = 3600
-term = 20
-wait = 0
-lot = 0.1
-slippage = 0.001
-
+from params import *
 
 def log_price(data, flag):
     log = "時間： " + data["close_time_dt"] + " 高値： " + str(data["high_price"]) + " 安値： " + str(data["low_price"]) + "\n"
@@ -24,7 +18,7 @@ def entry_signal(data, last_data, flag):
     
     signal = test.donchian(data, last_data)
     if signal["side"] == "BUY":
-        flag["records"]["log"].append(f"過去{term}足の最高値{signal['price']}円を、直近の高値が{data['high_price']}円でブレイクしました。")
+        flag["records"]["log"].append(f"過去{buy_term}足の最高値{signal['price']}円を、直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
         flag["records"]["log"].append(str(data["close_price"]) + "円で買いの指値注文を出します。")
 
         # ここに買い注文のコードを入れる
@@ -33,7 +27,7 @@ def entry_signal(data, last_data, flag):
         flag["order"]["price"] = round(data["close_price"] * lot)
 
     if signal["side"] == "SELL":
-        flag["records"]["log"].append(f"過去{term}足の最安値{signal['price']}円を、直近の安値が{data['low_price']}円でブレイクしました。")
+        flag["records"]["log"].append(f"過去{sell_term}足の最安値{signal['price']}円を、直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
         flag["records"]["log"].append(str(data["close_price"]) + "円で売りの指値注文を出します。")
 
         # ここに売り注文のコードを入れる
@@ -62,7 +56,7 @@ def close_position(data, last_data, flag):
 
     if flag["position"]["side"] == "BUY":
         if signal["side"] == "SELL":
-            flag["records"]["log"].append(f"過去{term}足の最安値{signal['price']}円を、直近の安値が{data['low_price']}円でブレイクしました。")
+            flag["records"]["log"].append(f"過去{sell_term}足の最安値{signal['price']}円を、直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
             flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。")
 
             # ここに決済の成行注文コードを入れる
@@ -79,7 +73,7 @@ def close_position(data, last_data, flag):
 
     if flag["position"]["side"] == "SELL":
         if signal["side"] == "BUY":
-            flag["records"]["log"].append(f"過去{term}足の最高値{signal['price']}円を、直近の高値が{data['high_price']}円でブレイクしました。")
+            flag["records"]["log"].append(f"過去{buy_term}足の最高値{signal['price']}円を、直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
             flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。")
 
             # ここに決済の成行注文コードを入れる
@@ -261,7 +255,7 @@ def main():
     i = 0
     while i < len(price):
 
-        if len(last_data) < term:
+        if len(last_data) < buy_term or len(last_data) < sell_term:
             last_data.append(price[i])
             flag = log_price(price[i], flag)
             time.sleep(wait)
@@ -278,7 +272,6 @@ def main():
         else:
             flag = entry_signal(data, last_data, flag)
 
-        del last_data[0]
         last_data.append(data)
         i += 1
         time.sleep(wait)
