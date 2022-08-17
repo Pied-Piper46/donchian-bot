@@ -2,4 +2,5 @@
 .ipynb_checkpoints/
 .DS_Store
 __pycache__
-log/
+system-log/
+trade-log/

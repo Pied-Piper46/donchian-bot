@@ -8,7 +8,7 @@ import logging
 formatter = '%(asctime)s : %(levelname)s : %(message)s'
 logging.basicConfig(format=formatter, level=logging.INFO)
 logger = logging.getLogger(__name__)
-handler = logging.FileHandler('log/console.log')
+handler = logging.FileHandler('system-log/console.log')
 handler.setFormatter(logging.Formatter(formatter))
 logger.addHandler(handler)
 

@@ -3,4 +3,4 @@ cd /Users/yuji.kanamitsu/Documents/BATMAN
 
 /Users/yuji.kanamitsu/.pyenv/shims/python3 ./accumulate_data.py
 
-# * * * * * /Users/yuji.kanamitsu/Documents/BATMAN/shell/accumulater.sh > /Users/yuji.kanamitsu/Documents/BATMAN/cron.log 2>&1
+# 0 11,14,17 * * * /Users/yuji.kanamitsu/Documents/BATMAN/shell/accumulater.sh > /Users/yuji.kanamitsu/Documents/BATMAN/system-log/cron.log 2>&1
