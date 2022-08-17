@@ -8,8 +8,9 @@ import time
 
 from params import *
 
-
 class Batman:
+
+    log_file = "trade-log/test_"
 
     def __init__(self, chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait):
 
@@ -107,7 +108,7 @@ class Batman:
         signal = self.donchian(data, last_data)
         if signal["side"] == "BUY":
             flag["records"]["log"].append(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
-            flag["records"]["log"].append(str(data["close_price"]) + "円で買いの指値注文を出します。")
+            flag["records"]["log"].append(str(data["close_price"]) + "円で買いの指値注文を出します。\n")
 
             # ここに買い注文のコードを入れる
             flag["order"]["ATR"] = self.calculate_volatility(last_data)
@@ -117,7 +118,7 @@ class Batman:
 
         if signal["side"] == "SELL":
             flag["records"]["log"].append(f"過去{self.sell_term}足の最安値{signal['price']}円を、直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
-            flag["records"]["log"].append(str(data["close_price"]) + "円で売りの指値注文を出します。")
+            flag["records"]["log"].append(str(data["close_price"]) + "円で売りの指値注文を出します。\n")
 
             # ここに売り注文のコードを入れる
             flag["order"]["ATR"] = self.calculate_volatility(last_data)
@@ -151,13 +152,13 @@ class Batman:
         if flag["position"]["side"] == "BUY":
             if signal["side"] == "SELL":
                 flag["records"]["log"].append(f"過去{self.sell_term}足の最安値{signal['price']}円を、直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
-                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。")
+                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。\n")
 
                 # ここに決済の成行注文コードを入れる
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
-                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で売りの指値注文を入れてドテンします。")
+                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で売りの指値注文を入れてドテンします。\n")
 
                 # ここに売り注文のコードを入れる
                 flag["order"]["ATR"] = self.calculate_volatility(last_data)
@@ -168,13 +169,13 @@ class Batman:
         if flag["position"]["side"] == "SELL":
             if signal["side"] == "BUY":
                 flag["records"]["log"].append(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
-                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。")
+                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。\n")
 
                 # ここに決済の成行注文コードを入れる
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
-                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で買いの指値注文を入れてドテンします。")
+                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で買いの指値注文を入れてドテンします。\n")
 
                 # ここに売り注文のコードを入れる
                 flag["order"]["ATR"] = self.calculate_volatility(last_data)
@@ -190,7 +191,7 @@ class Batman:
         if flag["position"]["side"] == "BUY":
             stop_price = flag["position"]["price"] - flag["position"]["ATR"] * self.stop_range
             if data["low_price"] < stop_price:
-                flag["records"]["log"].append(f"{stop_price}円の損切りラインに引っかかりました。\n")
+                flag["records"]["log"].append(f"{stop_price}円の損切りラインに引っかかりました。")
                 stop_price = round(stop_price - 2 * self.calculate_volatility(last_data) / (self.chart_sec / 60)) # 約定価格（1分足で２ティック分程度注文が遅れたと仮定）
                 flag["records"]["log"].append(str(stop_price) + "円あたりで成り行き注文を出してポジションを決済します。\n")
 
@@ -201,7 +202,7 @@ class Batman:
         if flag["position"]["side"] == "SELL":
             stop_price = flag["position"]["price"] + flag["position"]["ATR"] * self.stop_range
             if data["high_price"] > stop_price:
-                flag["records"]["log"].append(f"{stop_price}円の損切りラインに引っかかりました。\n")
+                flag["records"]["log"].append(f"{stop_price}円の損切りラインに引っかかりました。")
                 stop_price = round(stop_price + 2 * self.calculate_volatility(last_data) / (self.chart_sec / 60)) # 約定価格（1分足で２ティック分程度注文が遅れたと仮定）
                 flag["records"]["log"].append(str(stop_price) + "円あたりで成り行き注文を出してポジションを決済します。\n")
 
@@ -210,6 +211,11 @@ class Batman:
                 flag["position"]["count"] = 0
 
         return flag
+
+    
+    def output_log(self, log_file, data):
+        f = open(f"{log_file}{datetime.now().strftime('%Y-%m-%d-%H-%M')}.txt", 'wt', encoding='utf-8')
+        f.writelines(data)
 
 
 ### Main ####
@@ -253,8 +259,7 @@ def main():
     print(str(len(price)) + "件のローソク足データで検証")
     print("--------------------")
 
-    f = open(f"log/test_{datetime.now().strftime('%Y-%m-%d-%H-%M')}.txt", 'wt', encoding='utf-8')
-    f.writelines(flag["records"]["log"])
+    bot1.output_log(bot1.log_file, flag["records"]["log"])
     
 
 if __name__ == '__main__':

@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 from test import Batman
 from params import *
 
-
 class Backtest(Batman):
+
+    log_file = "trade-log/backtest_"
 
     slippage = 0.001
 
@@ -53,14 +54,14 @@ class Backtest(Batman):
         if flag["position"]["side"] == "BUY":
             if signal["side"] == "SELL":
                 flag["records"]["log"].append(f"過去{sell_term}足の最安値{signal['price']}円を、直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
-                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。")
+                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。\n")
 
                 # ここに決済の成行注文コードを入れる
                 self.records(flag, data, data["close_price"])
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
-                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で売りの指値注文を入れてドテンします。")
+                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で売りの指値注文を入れてドテンします。\n")
 
                 # ここに売り注文のコードを入れる
                 flag["order"]["ATR"] = super().calculate_volatility(last_data)
@@ -71,14 +72,14 @@ class Backtest(Batman):
         if flag["position"]["side"] == "SELL":
             if signal["side"] == "BUY":
                 flag["records"]["log"].append(f"過去{buy_term}足の最高値{signal['price']}円を、直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
-                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。")
+                flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。\n")
 
                 # ここに決済の成行注文コードを入れる
                 self.records(flag, data, data["close_price"])
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
-                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で買いの指値注文を入れてドテンします。")
+                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で買いの指値注文を入れてドテンします。\n")
 
                 # ここに売り注文のコードを入れる
                 flag["order"]["ATR"] = super().calculate_volatility(last_data)
@@ -164,6 +165,16 @@ class Backtest(Batman):
                 flag["records"]["log"].append(log)
 
         return flag
+
+
+    def plot_gross_curve(self, date, gross):
+
+        plt.plot(date, gross)
+        plt.xlabel("Date")
+        plt.ylabel("Balance")
+        plt.xticks(rotation = 50)
+
+        plt.show()
 
 
     def backtest(self, flag):
@@ -258,16 +269,9 @@ class Backtest(Batman):
             print(f"平均リターン　　：　{row.Rate}％")
             print(f"月間ドローダウン：　{-1 * row.Drawdown.astype(int)}円")
 
-        
-        f = open(f"log/{datetime.now().strftime('%Y-%m-%d-%H-%M')}-backlog.txt", 'wt', encoding='utf-8')
-        f.writelines(flag["records"]["log"])
+        super().output_log(Backtest.log_file, flag["records"]["log"])
 
-        plt.plot(records.Date, records.Gross)
-        plt.xlabel("Date")
-        plt.ylabel("Balance")
-        plt.xticks(rotation = 50)
-
-        plt.show()
+        self.plot_gross_curve(records.Date, records.Gross)
 
 
 def main():
