@@ -195,7 +195,6 @@ class Batman:
                 flag["records"]["log"].append(str(stop_price) + "円あたりで成り行き注文を出してポジションを決済します。\n")
 
                 # 成行注文コードを入れる
-                # records(flag, data, stop_price, "STOP")
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
@@ -207,7 +206,6 @@ class Batman:
                 flag["records"]["log"].append(str(stop_price) + "円あたりで成り行き注文を出してポジションを決済します。\n")
 
                 # 成行注文コードを入れる
-                # records(flag, data, stop_price, "STOP")
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
