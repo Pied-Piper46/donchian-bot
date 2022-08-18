@@ -3,6 +3,7 @@ from datetime import datetime
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 from test import Batman
 from params import *
@@ -13,21 +14,26 @@ class Backtest(Batman):
 
     slippage = 0.001
 
-    def __init__(self, chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait, lot):
-        super().__init__(chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait)
-        self.lot = lot
+    def __init__(self, chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait, trade_risk, levarage, start_funds):
+        super().__init__(chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait, trade_risk, levarage)
+
+        self.start_funds = start_funds
         
         self.flag = {
             "order": {
                 "exist": False,
                 "side": "",
                 "price": 0,
+                "stop": 0,
+                "lot": 0,
                 "count": 0
             },
             "position": {
                 "exist": False,
                 "side": "",
                 "price": 0,
+                "stop": 0,
+                "lot": 0,
                 "count": 0
             },
             "records": {
@@ -36,11 +42,30 @@ class Backtest(Batman):
                 "return": [],
                 "side": [],
                 "stop-count": [],
+                "funds": self.start_funds,
                 "holding-periods": [],
                 "slippage": [],
                 "log": []
             }
         }
+
+
+    def calculate_lot(self, last_data, data, flag):
+
+        balance = flag["records"]["funds"]
+
+        volatility = self.calculate_volatility(last_data, flag)
+        stop = self.stop_range * volatility
+
+        calc_lot = np.floor(balance * self.trade_risk / stop * 100) / 100
+        able_lot = np.floor(balance * self.levarage / data["close_price"] * 100) / 100
+        lot = min(calc_lot, able_lot)
+
+        flag["records"]["log"].append(f"現在のアカウント残高{balance}")
+        flag["records"]["log"].append(f"許容リスクから購入できる枚数は最大{calc_lot}BTCまでです。")
+        flag["records"]["log"].append(f"証拠金から購入できる枚数は最大{able_lot}BTCまでです。")
+
+        return lot, stop
 
 
     def close_position(self, data, last_data, flag):
@@ -49,11 +74,11 @@ class Backtest(Batman):
             return flag
 
         flag["position"]["count"] += 1
-        signal = super().donchian(data, last_data)
+        signal = self.donchian(data, last_data)
 
         if flag["position"]["side"] == "BUY":
             if signal["side"] == "SELL":
-                flag["records"]["log"].append(f"過去{sell_term}足の最安値{signal['price']}円を、直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
+                flag["records"]["log"].append(f"過去{self.sell_term}足の最安値{signal['price']}円を、直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
                 flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。\n")
 
                 # ここに決済の成行注文コードを入れる
@@ -61,17 +86,23 @@ class Backtest(Batman):
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
-                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で売りの指値注文を入れてドテンします。\n")
+                lot, stop = self.calculate_lot(last_data, data, flag)
+                if lot > Batman.min_size:
+                    flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で{lot}BTCの売り指値注文を入れてドテンします。\n")
 
-                # ここに売り注文のコードを入れる
-                flag["order"]["ATR"] = super().calculate_volatility(last_data)
-                flag["order"]["exist"] = True
-                flag["order"]["side"] = "SELL"
-                flag["order"]["price"] = data["close_price"]
+                    # ここに売り注文のコードを入れる
+                    flag["records"]["log"].append(f"{data['close_price'] + stop}円にストップを入れます。\n")
+                    flag["order"]["lot"] = lot
+                    flag["order"]["stop"] = stop
+                    flag["order"]["price"] = data["close_price"]
+                    flag["order"]["exist"] = True
+                    flag["order"]["side"] = "SELL"
+                else:
+                    flag["records"]["log"].append(f"注文可能枚数{lot}が、最低注文単位に満たなかったので注文を見送ります。\n")
 
         if flag["position"]["side"] == "SELL":
             if signal["side"] == "BUY":
-                flag["records"]["log"].append(f"過去{buy_term}足の最高値{signal['price']}円を、直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
+                flag["records"]["log"].append(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
                 flag["records"]["log"].append(str(data['close_price']) + "円あたりで成行注文を出してポジションを決済します。\n")
 
                 # ここに決済の成行注文コードを入れる
@@ -79,13 +110,19 @@ class Backtest(Batman):
                 flag["position"]["exist"] = False
                 flag["position"]["count"] = 0
 
-                flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で買いの指値注文を入れてドテンします。\n")
+                lot, stop = self.calculate_lot(last_data, data, flag)
+                if lot > Batman.min_size:
+                    flag["records"]["log"].append(f"さらに{str(data['close_price'])}円で{lot}BTCの買い指値注文を入れてドテンします。\n")
 
-                # ここに売り注文のコードを入れる
-                flag["order"]["ATR"] = super().calculate_volatility(last_data)
-                flag["order"]["exist"] = True
-                flag["order"]["side"] = "BUY"
-                flag["order"]["price"] = data["close_price"]
+                    # ここに売り注文のコードを入れる
+                    flag["records"]["log"].append(f"{data['close_price'] - stop}円にストップを入れます。\n")
+                    flag["order"]["lot"] = lot
+                    flag["order"]["stop"] = stop
+                    flag["order"]["price"] = data["close_price"]
+                    flag["order"]["exist"] = True
+                    flag["order"]["side"] = "BUY"
+                else:
+                    flag["records"]["log"].append(f"注文可能枚数{lot}が、最低注文単位に満たなかったので注文を見送ります。\n")
 
         return flag
 
@@ -93,10 +130,10 @@ class Backtest(Batman):
     def stop_position(self, data, last_data, flag):
 
         if flag["position"]["side"] == "BUY":
-            stop_price = flag["position"]["price"] - flag["position"]["ATR"] * stop_range
+            stop_price = flag["position"]["price"] - flag["position"]["stop"]
             if data["low_price"] < stop_price:
                 flag["records"]["log"].append(f"{stop_price}円の損切りラインに引っかかりました。\n")
-                stop_price = round(stop_price - 2 * super().calculate_volatility(last_data) / (chart_sec / 60)) # 約定価格（1分足で２ティック分程度注文が遅れたと仮定）
+                stop_price = round(stop_price - 2 * self.calculate_volatility(last_data, flag) / (self.chart_sec / 60)) # 約定価格（1分足で２ティック分程度注文が遅れたと仮定）
                 flag["records"]["log"].append(str(stop_price) + "円あたりで成り行き注文を出してポジションを決済します。\n")
 
                 # 成行注文コードを入れる
@@ -105,10 +142,10 @@ class Backtest(Batman):
                 flag["position"]["count"] = 0
 
         if flag["position"]["side"] == "SELL":
-            stop_price = flag["position"]["price"] + flag["position"]["ATR"] * stop_range
+            stop_price = flag["position"]["price"] + flag["position"]["stop"]
             if data["high_price"] > stop_price:
                 flag["records"]["log"].append(f"{stop_price}円の損切りラインに引っかかりました。\n")
-                stop_price = round(stop_price + 2 * super().calculate_volatility(last_data) / (chart_sec / 60)) # 約定価格（1分足で２ティック分程度注文が遅れたと仮定）
+                stop_price = round(stop_price + 2 * self.calculate_volatility(last_data, flag) / (self.chart_sec / 60)) # 約定価格（1分足で２ティック分程度注文が遅れたと仮定）
                 flag["records"]["log"].append(str(stop_price) + "円あたりで成り行き注文を出してポジションを決済します。\n")
 
                 # 成行注文コードを入れる
@@ -121,9 +158,9 @@ class Backtest(Batman):
 
     def records(self, flag, data, close_price, close_type=None):
 
-        entry_price = int(round(flag["position"]["price"] * self.lot))
-        exit_price = int(round(close_price * self.lot))
-        trade_cost = round(exit_price * slippage)
+        entry_price = int(round(flag["position"]["price"] * flag["position"]["lot"]))
+        exit_price = int(round(close_price * flag["position"]["lot"]))
+        trade_cost = round(exit_price * Backtest.slippage)
 
         log = "スリッページ・手数料として " + str(trade_cost) + "円を考慮します\n"
         flag["records"]["log"].append(log)
@@ -144,6 +181,7 @@ class Backtest(Batman):
             flag["records"]["side"].append("BUY")
             flag["records"]["profit"].append(buy_profit)
             flag["records"]["return"].append(round(buy_profit / entry_price * 100, 4))
+            flag["records"]["funds"] = flag["records"]["funds"] + buy_profit
 
             if buy_profit > 0:
                 log = str(buy_profit) + "円の利益です\n"
@@ -156,6 +194,7 @@ class Backtest(Batman):
             flag["records"]["side"].append("SELL")
             flag["records"]["profit"].append(sell_profit)
             flag["records"]["return"].append(round(sell_profit / entry_price * 100, 4))
+            flag["records"]["funds"] = flag["records"]["funds"] + sell_profit
 
             if sell_profit > 0:
                 log = str(sell_profit) + "円の利益です\n"
@@ -200,8 +239,10 @@ class Backtest(Batman):
 
         records["Gross"] = records.Profit.cumsum()
 
-        records["Drawdown"] = records.Gross.cummax().subtract(records.Gross)
-        records["DrawdownRate"] = round(records.Drawdown / records.Gross.cummax() * 100, 1)
+        records["Funds"] = records.Gross + self.start_funds
+
+        records["Drawdown"] = records.Funds.cummax().subtract(records.Funds)
+        records["DrawdownRate"] = round(records.Drawdown / records.Funds.cummax() * 100, 1)
 
         buy_records = records[records.Side.isin(["BUY"])]
         sell_records = records[records.Side.isin(["SELL"])]
@@ -212,6 +253,7 @@ class Backtest(Batman):
         month_records = pd.DataFrame({
             "Number": grouped.Profit.count(),
             "Gross": grouped.Profit.sum(),
+            "Funds": grouped.Funds.last(),
             "Rate": round(grouped.Rate.mean(), 2),
             "Drawdown": grouped.Drawdown.max(),
             "Periods": grouped.Periods.mean()
@@ -253,8 +295,11 @@ class Backtest(Batman):
         print(f"最大ドローダウン　：　{-1 * records.Drawdown.max()}円 / {-1 * records.DrawdownRate.loc[records.Drawdown.idxmax()]}％")
         print(f"利益合計　　　　　：　{records[records.Profit>0].Profit.sum()}円")
         print(f"損失合計　　　　　：　{records[records.Profit<0].Profit.sum()}円")
-        print("")
         print(f"最終損益　　　　　：　{records.Profit.sum()}円")
+        print("")
+        print(f"初期資金　　　　　：　{self.start_funds}円")
+        print(f"最終資金　　　　　：　{records.Funds.iloc[-1]}円")
+        print(f"運用成績　　　　　：　{round(records.Funds.iloc[-1] / self.start_funds * 100, 2)}％")
         print(f"手数料合計　　　　：　{-1 * records.Slippage.sum()}円")
 
         print("---------------------------")
@@ -267,16 +312,17 @@ class Backtest(Batman):
             print(f"トレード数　　　：　{row.Number.astype(int)}回")
             print(f"月間損益　　　　：　{row.Gross.astype(int)}円")
             print(f"平均リターン　　：　{row.Rate}％")
-            print(f"月間ドローダウン：　{-1 * row.Drawdown.astype(int)}円")
+            print(f"継続ドローダウン：　{-1 * row.Drawdown.astype(int)}円")
+            print(f"月末資金　　　　：　{row.Funds.astype(int)}円")
 
-        super().output_log(Backtest.log_file, flag["records"]["log"])
+        self.output_log(Backtest.log_file, flag["records"]["log"])
 
-        self.plot_gross_curve(records.Date, records.Gross)
+        self.plot_gross_curve(records.Date, records.Funds)
 
 
 def main():
 
-    bot1 = Backtest(chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait, lot)
+    bot1 = Backtest(chart_sec, buy_term, sell_term, volatility_term, stop_range, judge_price, wait, trade_risk, levarage, start_funds)
     price = bot1.get_price(after=1483228800)
 
     flag = bot1.flag
@@ -290,7 +336,7 @@ def main():
         if len(last_data) < need_term:
             last_data.append(price[i])
             flag = bot1.log_price(price[i], flag)
-            time.sleep(wait)
+            time.sleep(bot1.wait)
             i += 1
             continue
 
@@ -307,7 +353,7 @@ def main():
 
         last_data.append(data)
         i += 1
-        time.sleep(wait)
+        time.sleep(bot1.wait)
 
     print("-----------------------")
     print("テスト期間")

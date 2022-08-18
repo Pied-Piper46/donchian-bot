@@ -1,16 +1,20 @@
 # for simple backtest
 chart_sec = 3600
-buy_term = 20
-sell_term = 20
+buy_term = 30
+sell_term = 30
+
 judge_price = {
     "BUY": "high_price",
     "SELL": "low_price"
 }
+
 volatility_term = 30
-stop_range = 1
+stop_range = 2
+trade_risk = 0.1
+levarage = 3
+start_funds = 300000
+
 wait = 0
-lot = 0.1
-slippage = 0.001
 
 
 # for multiple backtest
