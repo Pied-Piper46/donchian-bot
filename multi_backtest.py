@@ -18,14 +18,14 @@ def entry_signal(data, last_data, flag):
         # ここに買い注文のコードを入れる
         flag["order"]["exist"] = True
         flag["order"]["side"] = "BUY"
-        flag["order"]["price"] = round(data["close_price"] * lot)
+        flag["order"]["price"] = data["close_price"]
 
     if signal["side"] == "SELL":
 
         # ここに売り注文のコードを入れる
         flag["order"]["exist"] = True
         flag["order"]["side"] = "SELL"
-        flag["order"]["price"] = round(data["close_price"] * lot)
+        flag["order"]["price"] = data["close_price"]
 
     return flag
 
@@ -57,7 +57,7 @@ def close_position(data, last_data, flag):
             # ここに売り注文のコードを入れる
             flag["order"]["exist"] = True
             flag["order"]["side"] = "SELL"
-            flag["order"]["price"] = round(data["close_price"] * lot)
+            flag["order"]["price"] = data["close_price"]
 
     if flag["position"]["side"] == "SELL":
         if signal["side"] == "BUY":
@@ -70,7 +70,7 @@ def close_position(data, last_data, flag):
             # ここに売り注文のコードを入れる
             flag["order"]["exist"] = True
             flag["order"]["side"] = "BUY"
-            flag["order"]["price"] = round(data["close_price"] * lot)
+            flag["order"]["price"] = data["close_price"]
 
     return flag
 
