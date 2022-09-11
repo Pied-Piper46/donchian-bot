@@ -547,7 +547,7 @@ class Backtest:
         print(f"損切りの回数　　　：　{sell_records.Stop.sum()}回")
 
         print("---------------------------")
-        print("総合成績")
+        print("総合成績") # TODO: 損益レシオの算出
         print("---------------------------")
         print(f"全トレード数　　　：　{len(records)}回")
         print(f"勝率　　　　　　　：　{round(len(records[records.Profit>0]) / len(records) * 100, 1)}％")
