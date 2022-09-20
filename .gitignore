@@ -7,3 +7,5 @@ trade-log/
 .vscode
 sample.py
 sample.txt
+RuinTable.csv
+backtest.csv
