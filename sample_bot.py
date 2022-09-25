@@ -630,8 +630,8 @@ def bitflyer_collateral():
     while True:
         try:
             collateral = bitflyer.private_get_getcollateral()
-            spendable_collateral = np.floor(collateral["collateral"] - collateral["require_collateral"])
-            print_log(f"現在のアカウントの口座残高は{int(collateral['collateral'])}円です。")
+            spendable_collateral = np.floor(float(collateral["collateral"]) - float(collateral["require_collateral"]))
+            print_log(f"現在のアカウントの口座残高は{int(float(collateral['collateral']))}円です。")
             print_log(f"新規注文に利用可能な証拠金の額は{int(spendable_collateral)}円です。")
             return int(spendable_collateral)
 
@@ -649,8 +649,8 @@ def bitflyer_check_positions():
             size = []
             price = []
             positions = bitflyer.private_get_getpositions(params={"product_code": "FX_BTC_JPY"})
-            if not position:
-                # print_log("現在ポジションは存在しません。")
+            if not positions:
+                print_log("現在ポジションは存在しません。")
                 return 0, 0, None
             for pos in positions:
                 size.append(pos["size"])
@@ -659,7 +659,7 @@ def bitflyer_check_positions():
 
             average_price = round(sum(price[i] * size[i] for i in range(len(price))) / sum(size))
             sum_size = round(sum(size), 2)
-            # print_log(f"保有中の建玉：合計{len(price)}つ\n平均建値：{average_price}円\n合計サイズ：{sum_size}BTC\n方向：{side}")
+            print_log(f"保有中の建玉：合計{len(price)}つ\n平均建値：{average_price}円\n合計サイズ：{sum_size}BTC\n方向：{side}")
 
             return average_price, sum_size, side
 
@@ -671,37 +671,37 @@ def bitflyer_check_positions():
             time.sleep(20)
 
 
-### MAIN ###
+## MAIN ###
 
-# need_term = max(buy_term, sell_term, volatility_term, MA_term)
-# print_log(f"{need_term}期間分のデータの準備中")
+need_term = max(buy_term, sell_term, volatility_term, MA_term)
+print_log(f"{need_term}期間分のデータの準備中")
 
-# price = get_price(chart_sec)
-# last_data = price[-1*need_term - 2: -2]
-# print_price(last_data[-1])
-# print_log(f"---{wait}秒待機---")
-# time.sleep(wait)
+price = get_price(chart_sec)
+last_data = price[-1*need_term - 2: -2]
+print_price(last_data[-1])
+print_log(f"---{wait}秒待機---")
+time.sleep(wait)
 
-# print_log("---実行開始---")
+print_log("---実行開始---")
 
-# while True:
+while True:
 
-#     data = get_realtime_price(chart_sec)
-#     if data["settled"]["close_time"] > last_data[-1]["close_time"]:
-#         print_price(data["settled"])
+    data = get_realtime_price(chart_sec)
+    if data["settled"]["close_time"] > last_data[-1]["close_time"]:
+        print_price(data["settled"])
 
-#     if flag["position"]["exist"]:
-#         flag = stop_position(data, flag)
-#         flag = close_position(data, last_data, flag)
-#         flag = add_position(data, flag)
+    if flag["position"]["exist"]:
+        flag = stop_position(data, flag)
+        flag = close_position(data, last_data, flag)
+        flag = add_position(data, flag)
 
-#     else:
-#         flag = find_unexpected_pos(flag)
-#         flag = entry_signal(data, last_data, flag)
+    else:
+        flag = find_unexpected_pos(flag)
+        flag = entry_signal(data, last_data, flag)
 
-#     if data["settled"]["close_time"] > last_data[-1]["close_time"]: # 確定足が更新されたら
-#         last_data.append(data["settled"])
-#         if len(last_data) > need_term:
-#             del last_data[0]
+    if data["settled"]["close_time"] > last_data[-1]["close_time"]: # 確定足が更新されたら
+        last_data.append(data["settled"])
+        if len(last_data) > need_term:
+            del last_data[0]
 
-#     time.sleep(wait)
+    time.sleep(wait)
