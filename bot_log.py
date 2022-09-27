@@ -1,19 +1,19 @@
 import requests
 from logging import getLogger, Formatter, StreamHandler, FileHandler, INFO
 
-line_config = "OFF"
-log_config = "OFF"
-log_file_path = "test.log"
-line_token = ""
+line_config = "ON"
+log_config = "ON"
+log_file_path = "sample_bot.log"
+line_token = "r2bskf53K9MkZLIqVSdyy9qQ2H2lgxm7vppuV4q15oD"
 
 if log_config == "ON":
     logger = getLogger(__name__)
     handlerSh = StreamHandler()
-    handerFile = FileHandler(log_file_path)
+    handlerFile = FileHandler(log_file_path)
     handlerSh.setLevel(INFO)
     handlerFile.setLevel(INFO)
     logger.setLevel(INFO)
-    logger.addHandler(handlerSj)
+    logger.addHandler(handlerSh)
     logger.addHandler(handlerFile)
 
 
@@ -32,6 +32,6 @@ def print_log(text):
                 print(text)
 
     if log_config == "ON":
-        logger.info(str(e))
+        logger.info(text)
     else:
         print(text)

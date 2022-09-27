@@ -7,11 +7,11 @@ import ccxt
 from bot_log import print_log
 from get_secrets import get_secrets
 
-MIN_LOT = 0.001 # 最低注文枚数
+MIN_LOT = 0.01 # 最低注文枚数
 
 wait = 180 # ループ待機時間（高頻度で価格取得APIのリクエストを飛ばすと制限にかかる）
 
-chart_sec = 3600 # 使用する時間軸
+chart_sec = 300 # 使用する時間軸
 chart_API = "cryptowatch" # cryptowatch / cryptocompare
 
 buy_term = 30 # ブレイクアウト判定期間
@@ -24,7 +24,7 @@ judge_price = { # ブレイク判断
 volatility_term = 5 # 平均ボラティリティ算出期間
 stop_range = 2 # 何レンジ幅にストップを入れるか
 trade_risk = 0.03 # １トレードあたり口座の何％まで損失を許容するか
-levarage = 3 # レバレッジ
+levarage = 2 # レバレッジ
 
 entry_times = 2
 entry_range = 1
@@ -523,7 +523,7 @@ def get_realtime_price(min):
 
 
 def print_price(data):
-    print_log("時間：" + datetime.fromtimestamp(data["close_price"]).strftime('%Y/%m/%d %H:%M') + "　高値：" + str(data["high_price"]) + "　安値：" + str(data["low_price"]) + "　終値：" + str(data["close_price"]))
+    print_log("時間：" + datetime.fromtimestamp(data["close_time"]).strftime('%Y/%m/%d %H:%M') + "　高値：" + str(data["high_price"]) + "　安値：" + str(data["low_price"]) + "　終値：" + str(data["close_price"]))
 
 
 def calculate_volatility(last_data):
@@ -671,7 +671,7 @@ def bitflyer_check_positions():
             time.sleep(20)
 
 
-## MAIN ###
+# MAIN ###
 
 need_term = max(buy_term, sell_term, volatility_term, MA_term)
 print_log(f"{need_term}期間分のデータの準備中")
