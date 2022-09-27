@@ -61,7 +61,7 @@ Problem3 :
 def problem3():
 
     # ファイルデータをDataFrameで読み込み + 時刻をDatetimeに変換、DataFrameのindexに。
-    f = open("data_fx.json", "r", encoding="utf-8")
+    f = open("data.json", "r", encoding="utf-8")
     file_data = json.load(f)
     data = file_data["result"][str(60)]
     df = pd.DataFrame(data, columns=["CloseTime", "OpenPrice", "HighPrice", "LowPrice", "ClosePrice", "Volume", "QuoteVolume"])
@@ -87,6 +87,6 @@ def problem3():
 
     return drop_time, duplicated_time
     
-# drop, dupli = problem3()
-# print(drop)
-# print(dupli)
+drop, dupli = problem3()
+print(drop)
+print(dupli)

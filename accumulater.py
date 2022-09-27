@@ -51,7 +51,6 @@ def accumulater(min, symbol, before=0, after=0):
 
         f = open(filepath, "w", encoding="utf-8")
         json.dump(file_data, f)
-        print(diff_data)
         logger.info(f"({symbol}) Accumulated {len(diff_data)} data.")
         
         return diff_data
