@@ -1,10 +1,21 @@
+from datetime import datetime
 import requests
 from logging import getLogger, Formatter, StreamHandler, FileHandler, INFO
 
 line_config = "ON"
 log_config = "ON"
-log_file_path = "sample_bot.log"
 line_token = "r2bskf53K9MkZLIqVSdyy9qQ2H2lgxm7vppuV4q15oD"
+
+timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M')
+
+BACKTEST = "ON"
+if BACKTEST == "ON":
+    log_file_path = f"backtest-log/samplebot_{timestamp}.log"
+    line_config = "OFF"
+    log_config = "ON"
+else:
+    log_file_path = f"bot-log/samplebot_{timestamp}.log"
+
 
 if log_config == "ON":
     logger = getLogger(__name__)

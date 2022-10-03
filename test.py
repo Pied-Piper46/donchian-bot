@@ -87,6 +87,23 @@ def problem3():
 
     return drop_time, duplicated_time
     
-drop, dupli = problem3()
-print(drop)
-print(dupli)
+# drop, dupli = problem3()
+# print(drop)
+# print(dupli)
+
+
+"""
+Problem4 :
+バックテストのログ出力方法変更。関数を使い回しできるようにするため。
+元：flag["records"]["log"].append(text) -> logger.info(text)　に変更したい
+"""
+
+def answer4():
+    from sample_bot import get_price, calculate_volatility
+
+    price = get_price(3600)
+    vol = calculate_volatility(price)
+    print(vol)
+
+
+

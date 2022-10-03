@@ -138,7 +138,7 @@ def entry_signal(data, last_data, flag):
 def stop_position(data, flag):
 
     if trailing_config == "ON":
-        flag = trail_stop(data, flag)
+        flag = trail_stop(data["settled"], flag)
 
     if flag["position"]["side"] == "BUY":
         stop_price = flag["position"]["price"] - flag["position"]["stop"]
@@ -272,7 +272,7 @@ def filter(signal):
     return False
 
 
-def calculate_MA(value, before=None):
+def calculate_MA(value, last_data, before=None):
     
     if before is None:
         MA = sum(i["close_price"] for i in last_data[-1*value: ]) / value
@@ -345,12 +345,10 @@ def add_position(data, flag):
         
         # Order
         if flag["position"]["side"] == "BUY":
-
             print_log(f"現在のポジションに追加して{lot}BTCの買い注文を出します。")
             entry_price = bitflyer_market("BUY", lot)
 
         if flag["position"]["side"] == "SELL":
-
             print_log(f"現在のポジションに追加して{lot}BTCの売り注文を出します。")
             entry_price = bitflyer_market("SELL", lot)
 
@@ -378,14 +376,16 @@ def trail_stop(data, flag):
         return flag
 
     if flag["position"]["side"] == "BUY":
-        moved_range = round(data["settled"]["high_price"] - flag["position"]["price"])
+        moved_range = round(data["high_price"] - flag["position"]["price"])
     if flag["position"]["side"] == "SELL":
-        moved_range = round(flag["position"]["price"] - data["settled"]["low_price"])
+        moved_range = round(flag["position"]["price"] - data["low_price"])
 
     if moved_range < 0 or flag["position"]["stop-EP"] >= moved_range:
         return flag
     else:
         flag["position"]["stop-EP"] = moved_range
+
+    flag["position"]["stop"] = round(flag["position"]["stop"] - (moved_range + flag["position"]["stop"]) * flag["position"]["stop-AF"])
 
     flag["position"]["stop-AF"] = round(flag["position"]["stop-AF"] + stop_AF_add, 2)
     if flag["position"]["stop-AF"] >= stop_AF_max:
@@ -523,7 +523,7 @@ def get_realtime_price(min):
 
 
 def print_price(data):
-    print_log("時間：" + datetime.fromtimestamp(data["close_time"]).strftime('%Y/%m/%d %H:%M') + "　高値：" + str(data["high_price"]) + "　安値：" + str(data["low_price"]) + "　終値：" + str(data["close_price"]))
+    print_log("時間：" + str(data["close_time_dt"]) + "　高値：" + str(data["high_price"]) + "　安値：" + str(data["low_price"]) + "　終値：" + str(data["close_price"]))
 
 
 def calculate_volatility(last_data):
@@ -672,36 +672,37 @@ def bitflyer_check_positions():
 
 
 # MAIN ###
+if __name__ == "__main__":
 
-need_term = max(buy_term, sell_term, volatility_term, MA_term)
-print_log(f"{need_term}期間分のデータの準備中")
+    need_term = max(buy_term, sell_term, volatility_term, MA_term)
+    print_log(f"{need_term}期間分のデータの準備中")
 
-price = get_price(chart_sec)
-last_data = price[-1*need_term - 2: -2]
-print_price(last_data[-1])
-print_log(f"---{wait}秒待機---")
-time.sleep(wait)
-
-print_log("---実行開始---")
-
-while True:
-
-    data = get_realtime_price(chart_sec)
-    if data["settled"]["close_time"] > last_data[-1]["close_time"]:
-        print_price(data["settled"])
-
-    if flag["position"]["exist"]:
-        flag = stop_position(data, flag)
-        flag = close_position(data, last_data, flag)
-        flag = add_position(data, flag)
-
-    else:
-        flag = find_unexpected_pos(flag)
-        flag = entry_signal(data, last_data, flag)
-
-    if data["settled"]["close_time"] > last_data[-1]["close_time"]: # 確定足が更新されたら
-        last_data.append(data["settled"])
-        if len(last_data) > need_term:
-            del last_data[0]
-
+    price = get_price(chart_sec)
+    last_data = price[-1*need_term - 2: -2]
+    print_price(last_data[-1])
+    print_log(f"---{wait}秒待機---")
     time.sleep(wait)
+
+    print_log("---実行開始---")
+
+    while True:
+
+        data = get_realtime_price(chart_sec)
+        if data["settled"]["close_time"] > last_data[-1]["close_time"]:
+            print_price(data["settled"])
+
+        if flag["position"]["exist"]:
+            flag = stop_position(data, flag)
+            flag = close_position(data, last_data, flag)
+            flag = add_position(data, flag)
+
+        else:
+            flag = find_unexpected_pos(flag)
+            flag = entry_signal(data, last_data, flag)
+
+        if data["settled"]["close_time"] > last_data[-1]["close_time"]: # 確定足が更新されたら
+            last_data.append(data["settled"])
+            if len(last_data) > need_term:
+                del last_data[0]
+
+        time.sleep(wait)
