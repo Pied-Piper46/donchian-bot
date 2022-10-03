@@ -523,7 +523,7 @@ def get_realtime_price(min):
 
 
 def print_price(data):
-    print_log("時間：" + str(data["close_time_dt"]) + "　高値：" + str(data["high_price"]) + "　安値：" + str(data["low_price"]) + "　終値：" + str(data["close_price"]))
+    print_log("時間：" + datetime.fromtimestamp(data["close_time"]).strftime('%Y/%m/%d %H:%M') + "　高値：" + str(data["high_price"]) + "　安値：" + str(data["low_price"]) + "　終値：" + str(data["close_price"]))
 
 
 def calculate_volatility(last_data):
