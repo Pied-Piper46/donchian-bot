@@ -7,76 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sample_bot as bot
-from bot_log import print_log
-
-csv_file = "backtest-log/samplebot.csv"
-
-MIN_LOT = 0.01
-
-chart_sec = 3600
-chart_API = "cryptowatch" # cryptowatch / cryptocompare
-
-buy_term = 30
-sell_term = 30
-judge_price = {
-    "BUY": "high_price",
-    "SELL": "low_price"
-}
-
-TEST_MODE_LOT = "adjustable" # "fixed": 常に固定ロット / "adjustable": 可変ロット
-
-volatility_term = 30
-stop_range = 2
-trade_risk = 0.04
-levarage = 2
-start_funds = 300000
-
-entry_times = 1
-entry_range = 0.5
-
-stop_config = "ON" # "ON" / "OFF" / "TRAILING"
-stop_AF = 0.02
-stop_AF_add = 0.02
-stop_AF_max = 0.2
-
-slippage = 0.0005
-
-filter_VER = "B" # "OFF" / "A" / "B"
-MA_term = 200
-
-flag = {
-    "position": {
-        "exist": False,
-        "side": "",
-        "price": 0,
-        "stop": 0,
-        "ATR": 0,
-        "lot": 0,
-        "count": 0,
-        "stop-AF": stop_AF,
-        "stop-EP": 0
-    },
-    "add-position": {
-        "count": 0,
-        "first-entry-price": 0,
-        "last-entry-price": 0,
-        "unit-range": 0,
-        "unit-size": 0,
-        "stop": 0
-    },
-    "records": {
-        "date": [],
-        "profit": [],
-        "return": [],
-        "side": [],
-        "stop-count": [],
-        "funds": start_funds,
-        "holding-periods": [],
-        "slippage": [],
-        "filter": [],
-        "filter-match": "",
-    }
-}
+from bot_log import print_log, log_file_path
 
 
 def donchian(data, last_data):
@@ -146,7 +77,6 @@ def add_position(data, last_data, flag):
         flag["add-position"]["last-entry-price"] = flag["position"]["price"]
         flag["add-position"]["count"] += 1
 
-
     while True:
 
         if flag["add-position"]["count"] >= entry_times:
@@ -162,6 +92,8 @@ def add_position(data, last_data, flag):
             should_add_position = True
         elif flag["position"]["side"] == "SELL" and (last_entry_price - current_price) > unit_range:
             should_add_position = True
+        else:
+            break
 
         if should_add_position:
             print_log(f"--------------------【追加注文】add_position() --------------------")
@@ -175,14 +107,13 @@ def add_position(data, last_data, flag):
                 return flag
 
             if flag["position"]["side"] == "BUY":
-                print_log(f"現在のポジションに追加して、{entry_price}円で{lot}BTCの買い注文を出します。")
                 entry_price = first_entry_price + (flag["add-position"]["count"] * unit_range)
+                print_log(f"現在のポジションに追加して、{entry_price}円で{lot}BTCの買い注文を出します。")
 
 
             if flag["position"]["side"] == "SELL":
-                print_log(f"現在のポジションに追加して、{entry_price}円で{lot}BTCの売り注文を出します。")
                 entry_price = first_entry_price - (flag["add-position"]["count"] * unit_range)
-
+                print_log(f"現在のポジションに追加して、{entry_price}円で{lot}BTCの売り注文を出します。")
 
             flag["position"]["stop"] = stop
             flag["position"]["price"] = int(round((flag["position"]["price"] * flag["position"]["lot"] + entry_price * lot) / (flag["position"]["lot"] + lot)))
@@ -217,7 +148,6 @@ def filter(signal, flag):
             return flag
         else:
             flag["records"]["filter-match"] = "False"
-            print_log(f"この取引はフィルターにかかりませんでした。")
             return flag
 
     if filter_VER == "B":
@@ -229,10 +159,8 @@ def filter(signal, flag):
             return flag
         else:
             flag["records"]["filter-match"] = "False"
-            print_log(f"この取引はフィルターにかかりませんでした。")
             return flag
     
-    print_log(f"この取引はフィルターにかかりませんでした。")
     return flag
 
 
@@ -244,9 +172,6 @@ def entry_signal(data, last_data, flag):
         print_log(f"--------------------【エントリー判定】entry_signal() --------------------")
         print_log(f"【買】過去{buy_term}足の最高値{signal['price']}を直近の価格が{data[judge_price['BUY']]}円でブレイクしました。")
 
-        # if filter(signal, flag) == False:
-        #     print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。\n")
-        #     return flag
         flag = filter(signal, flag)
 
         lot, stop, flag = calculate_lot(last_data, data, flag)
@@ -266,9 +191,6 @@ def entry_signal(data, last_data, flag):
         print_log(f"--------------------【エントリー判定】entry_signal() --------------------")
         print_log(f"【売】過去{sell_term}足の最安値{signal['price']}を直近の価格が{data[judge_price['SELL']]}円でブレイクしました。")
 
-        # if filter(signal) == False:
-        #     print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。\n")
-        #     return flag
         flag = filter(signal, flag)
 
         lot, stop, flag = calculate_lot(last_data, data, flag)
@@ -434,7 +356,7 @@ def records(flag, data, close_price, close_type=None):
         if buy_profit > 0:
             print_log(f"{str(buy_profit)}円の利益です")
         else:
-            print_log(f"{str(buy_profit)}円の利益です")
+            print_log(f"{str(buy_profit)}円の損失です")
 
     if flag["position"]["side"] == "SELL":
         flag["records"]["side"].append("SELL")
@@ -445,6 +367,9 @@ def records(flag, data, close_price, close_type=None):
             print_log(f"{str(sell_profit)}円の利益です")
         else:
             print_log(f"{str(sell_profit)}円の損失です")
+
+    if flag["records"]["filter-match"] != "True":
+        print_log("この取引はフィルターにかからなかったため、無効です。")
 
     return flag
 
@@ -461,6 +386,29 @@ def output_backtest(result):
 
 
 def backtest(flag):
+
+    # 使用パラメータ
+    params = {
+        "chart_sec": chart_sec,
+        "buy_term": buy_term,
+        "sell_term": sell_term,
+        "judge_price": judge_price,
+        "TEST_MODE_LOT": TEST_MODE_LOT,
+        "volatility_term": volatility_term,
+        "stop_range": stop_range,
+        "trade_risk": trade_risk,
+        "levarage": levarage,
+        "start_funds": start_funds,
+        "entry_times": entry_times,
+        "entry_range": entry_range,
+        "stop_config": stop_config,
+        "stop_AF": stop_AF,
+        "stop_AF_add": stop_AF_add,
+        "stop_AF_max": stop_AF_max,
+        "slippage": slippage,
+        "filter_VER": filter_VER,
+        "MA_term": MA_term
+    }
 
     records = pd.DataFrame({
         "Date": pd.to_datetime(flag["records"]["date"]),
@@ -504,7 +452,9 @@ def backtest(flag):
         "StartFunds": start_funds,
         "FinalFunds": filter_true_records.Funds.iloc[-1],
         "Performance": round(filter_true_records.Funds.iloc[-1] / start_funds * 100, 2),
-        "TotalSlippage": -1 * filter_true_records.Slippage.sum()
+        "TotalSlippage": -1 * filter_true_records.Slippage.sum(),
+        "LogFilePath": log_file_path,
+        "Params": params
     }
 
     output_backtest(result)
@@ -573,9 +523,83 @@ def backtest(flag):
 
 if __name__ == "__main__":
 
+    csv_file = "backtest-log/samplebot.csv"
+
+    MIN_LOT = 0.01
+
+    chart_sec = 3600
+    chart_API = "cryptowatch" # cryptowatch / cryptocompare
+
+    buy_term = 30
+    sell_term = 30
+    judge_price = {
+        "BUY": "high_price",
+        "SELL": "low_price"
+    }
+
+    TEST_MODE_LOT = "adjustable" # "fixed": 常に固定ロット / "adjustable": 可変ロット
+
+    volatility_term = 10
+    stop_range = 2
+    trade_risk = 0.04
+    levarage = 2
+    start_funds = 300000
+
+    entry_times = 2
+    entry_range = 0.5
+
+    stop_config = "TRAILING" # "ON" / "OFF" / "TRAILING"
+    stop_AF = 0.02
+    stop_AF_add = 0.02
+    stop_AF_max = 0.2
+
+    slippage = 0.0005
+
+    filter_VER = "OFF" # "OFF" / "A" / "B"
+    MA_term = 200
+
+    flag = {
+        "position": {
+            "exist": False,
+            "side": "",
+            "price": 0,
+            "stop": 0,
+            "ATR": 0,
+            "lot": 0,
+            "count": 0,
+            "stop-AF": stop_AF,
+            "stop-EP": 0
+        },
+        "add-position": {
+            "count": 0,
+            "first-entry-price": 0,
+            "last-entry-price": 0,
+            "unit-range": 0,
+            "unit-size": 0,
+            "stop": 0
+        },
+        "records": {
+            "date": [],
+            "profit": [],
+            "return": [],
+            "side": [],
+            "stop-count": [],
+            "funds": start_funds,
+            "holding-periods": [],
+            "slippage": [],
+            "filter": [],
+            "filter-match": "",
+        }
+    }
+
+
     price = bot.get_price(chart_sec, after=1451606400)
     last_data = []
-    need_term = max(buy_term, sell_term, volatility_term, MA_term)
+
+    if filter_VER == "OFF":
+        need_term = max(buy_term, sell_term, volatility_term)
+    else:
+        need_term = max(buy_term, sell_term, volatility_term, MA_term)
 
     i = 0
     while i < len(price):

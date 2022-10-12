@@ -7,64 +7,6 @@ import ccxt
 from bot_log import print_log
 from get_secrets import get_secrets
 
-MIN_LOT = 0.01 # 最低注文枚数
-
-wait = 180 # ループ待機時間（高頻度で価格取得APIのリクエストを飛ばすと制限にかかる）
-
-chart_sec = 300 # 使用する時間軸
-chart_API = "cryptowatch" # cryptowatch / cryptocompare
-
-buy_term = 30 # ブレイクアウト判定期間
-sell_term = 30 # ブレイクアウト判定期間
-judge_price = { # ブレイク判断
-    "BUY": "close_price", # high_price / close_price
-    "SELL": "close_price" # low_price / close_price
-}
-
-volatility_term = 5 # 平均ボラティリティ算出期間
-stop_range = 2 # 何レンジ幅にストップを入れるか
-trade_risk = 0.03 # １トレードあたり口座の何％まで損失を許容するか
-levarage = 2 # レバレッジ
-
-entry_times = 2
-entry_range = 1
-
-trailing_config = "ON"
-stop_AF = 0.02
-stop_AF_add = 0.02
-stop_AF_max = 0.2
-
-filter_VER = "OFF"
-MA_term = 200
-
-secrets = get_secrets("secrets.json")
-bitflyer = ccxt.bitflyer()
-bitflyer.apiKey = secrets["SECRETS"]["API_KEY"]
-bitflyer.secret = secrets["SECRETS"]["API_SECRET"]
-bitflyer.timeout = 30000
-
-flag = {
-    "position": {
-        "exist": False,
-        "side": "",
-        "price": 0,
-        "stop": 0,
-        "stop-AF": stop_AF,
-        "stop-EP": 0,
-        "ATR": 0,
-        "lot": 0,
-        "count": 0
-    },
-    "add-position": {
-        "count": 0,
-        "first-entry-price": 0,
-        "last-entry-price": 0,
-        "unit-range": 0,
-        "unit-size": 0,
-        "stop": 0
-    }
-}
-
 
 def donchian(data, last_data):
 
@@ -671,10 +613,71 @@ def bitflyer_check_positions():
             time.sleep(20)
 
 
-# MAIN ###
+### MAIN ###
 if __name__ == "__main__":
 
-    need_term = max(buy_term, sell_term, volatility_term, MA_term)
+    MIN_LOT = 0.01 # 最低注文枚数
+
+    wait = 180 # ループ待機時間（高頻度で価格取得APIのリクエストを飛ばすと制限にかかる）
+
+    chart_sec = 300 # 使用する時間軸
+    chart_API = "cryptowatch" # cryptowatch / cryptocompare
+
+    buy_term = 30 # ブレイクアウト判定期間
+    sell_term = 30 # ブレイクアウト判定期間
+    judge_price = { # ブレイク判断
+        "BUY": "close_price", # high_price / close_price
+        "SELL": "close_price" # low_price / close_price
+    }
+
+    volatility_term = 5 # 平均ボラティリティ算出期間
+    stop_range = 2 # 何レンジ幅にストップを入れるか
+    trade_risk = 0.03 # １トレードあたり口座の何％まで損失を許容するか
+    levarage = 2 # レバレッジ
+
+    entry_times = 2
+    entry_range = 1
+
+    trailing_config = "ON" # "ON" / "OFF" / "TRAILING"
+    stop_AF = 0.02
+    stop_AF_add = 0.02
+    stop_AF_max = 0.2
+
+    filter_VER = "OFF" # "OFF" / "A" / "B"
+    MA_term = 200
+
+    secrets = get_secrets("secrets.json")
+    bitflyer = ccxt.bitflyer()
+    bitflyer.apiKey = secrets["SECRETS"]["API_KEY"]
+    bitflyer.secret = secrets["SECRETS"]["API_SECRET"]
+    bitflyer.timeout = 30000
+
+    flag = {
+        "position": {
+            "exist": False,
+            "side": "",
+            "price": 0,
+            "stop": 0,
+            "stop-AF": stop_AF,
+            "stop-EP": 0,
+            "ATR": 0,
+            "lot": 0,
+            "count": 0
+        },
+        "add-position": {
+            "count": 0,
+            "first-entry-price": 0,
+            "last-entry-price": 0,
+            "unit-range": 0,
+            "unit-size": 0,
+            "stop": 0
+        }
+    }
+
+    if filter_VER == "OFF":
+        need_term = max(buy_term, sell_term, volatility_term)
+    else:
+        need_term = max(buy_term, sell_term, volatility_term, MA_term)
     print_log(f"{need_term}期間分のデータの準備中")
 
     price = get_price(chart_sec)

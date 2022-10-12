@@ -107,3 +107,23 @@ def answer4():
 
 
 
+"""
+Problem5:
+bot_logから別ファイルに変数を取得する
+"""
+
+def problem5():
+    from bot_log import print_log, log_file_path
+    import time
+
+    print(log_file_path)
+
+# problem5()
+
+"""
+Problem6:
+変数のスコープ検証
+"""
+# value = "a"
+def problem6():
+    print(value)
