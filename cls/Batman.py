@@ -43,7 +43,7 @@ class Batman1G:
         self.log_config = log_config
         self.line_config = line_config
         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M')
-        self.log_file = f"{Batman1G.LOG_DIR}/{timestamp}.log"
+        self.log_file = f"{self.LOG_DIR}/{timestamp}.log"
         
         if self.log_config == "ON":
             self.logger = getLogger(__name__)
@@ -82,7 +82,7 @@ class Batman1G:
         else:
             self.need_term = max(self.buy_term, self.sell_term, self.volatility_term, self.MA_term)
 
-        self.secrets = self.get_secrets(Batman1G.SECRET_FILE)
+        self.secrets = self.get_secrets(self.SECRET_FILE)
         self.bitflyer = ccxt.bitflyer()
         self.bitflyer.apiKey = self.secrets["BITFLYER"]["API_KEY"]
         self.bitflyer.secret = self.secrets["BITFLYER"]["API_SECRET"]
@@ -264,7 +264,7 @@ class Batman1G:
                 return flag
 
             log, stop, flag = self.calculate_lot(last_data, data, flag)
-            if lot >= Batman1G.MIN_LOT:
+            if lot >= self.MIN_LOT:
                 self.print_log(f"{data['settled']['close_price']}円あたりに{lot}BTCで売りの成り行き注文を出します。")
 
                 # Order
@@ -347,7 +347,7 @@ class Batman1G:
                     return flag
 
                 lot, stop, flag = self.calculate_lot(last_data, data, flag)
-                if lot >= Batman1G.MIN_LOT:
+                if lot >= self.MIN_LOT:
                     self.print_log(f"さらに{data['settled']['close_price']}円あたりに{lot}BTCの売りの成り行き注文を入れてドテンします。")
 
                     # Order
@@ -379,7 +379,7 @@ class Batman1G:
                     return flag
 
                 lot, stop, flag = self.calculate_lot(last_data, data, flag)
-                if lot >= Batman1G.MIN_LOT:
+                if lot >= self.MIN_LOT:
                     self.print_log(f"さらに{data['settled']['close_price']}円あたりに{lot}BTCの買いの成り行き注文を入れてドテンします。")
 
                     # Order
@@ -439,7 +439,7 @@ class Batman1G:
             stop = stop_range * volatility
             calc_lot = np.floor(balance * self.trade_risk / stop * 100) / 100
 
-            flag["add-position"]["unit-size"] = np.floor(calc_lot / self.entry_times * (1 / Batman1G.MIN_LOT)) / (1 / Batman1G.MIN_LOT)
+            flag["add-position"]["unit-size"] = np.floor(calc_lot / self.entry_times * (1 / self.MIN_LOT)) / (1 / self.MIN_LOT)
             flag["add-position"]["unit-range"] = round(volatility * self.entry_range)
             flag["add-position"]["stop"] = stop
             flag["position"]["ATR"] = round(volatility)
@@ -486,7 +486,7 @@ class Batman1G:
             self.print_log(f"{flag['add-position']['count'] + 1}/{self.entry_times}回目の追加注文を出します。")
 
             lot, stop, flag = self.calculate_lot(last_data, data, flag)
-            if lot < Batman1G.MIN_LOT:
+            if lot < self.MIN_LOT:
                 self.print_log(f"注文可能枚数{lot}が、最低注文単位に満たなかったので注文を見送ります。")
                 flag["add-position"]["count"] += 1
                 return flag
@@ -730,7 +730,7 @@ class Batman1G:
                 time.sleep(20)
     
 
-    # ----- Accumulating Functions ----- # # TODO
+    # ----- External Functions ----- # # TODO
     # @staticmethod # TODO: インスタンス化せずに呼び出すメソッド
     # def sample():
     #     return None
