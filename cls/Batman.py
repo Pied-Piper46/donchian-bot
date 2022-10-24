@@ -216,11 +216,11 @@ class Batman1G:
     def donchian(self, data, last_data):
 
         highest = max(i["high_price"] for i in last_data[(-1*self.buy_term): ])
-        if data[judge_price["BUY"]] > highest:
+        if data[self.judge_price["BUY"]] > highest:
             return {"side": "BUY", "price": highest}
 
         lowest = min(i["low_price"] for i in last_data[(-1*self.sell_term): ])
-        if data[judge_price["SELL"]] < lowest:
+        if data[self.judge_price["SELL"]] < lowest:
             return {"side": "SELL", "price": lowest}
 
         return {"side": None, "price": 0}
@@ -234,7 +234,7 @@ class Batman1G:
         signal = self.donchian(data["settled"], last_data)
 
         if signal["side"] == "BUY":
-            self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][judge_price['BUY']]}円でブレイクしました。")
+            self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['BUY']]}円でブレイクしました。")
 
             if self.filter(signal, data["settled"], last_data) == False:
                 self.print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。")
@@ -257,7 +257,7 @@ class Batman1G:
                 self.print_log(f"注文可能枚数{lot}が、最低注文単位に満たなかったので注文を見送ります。")
 
         if signal["side"] == "SELL":
-            self.print_log(f"過去{self.sell_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][judge_price['SELL']]}円でブレイクしました。")
+            self.print_log(f"過去{self.sell_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['SELL']]}円でブレイクしました。")
 
             if self.filter(signal, data["settled"], last_data) == False:
                 self.print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。")
@@ -330,7 +330,7 @@ class Batman1G:
 
         if flag["position"]["side"] == "BUY":
             if signal["side"] == "SELL":
-                self.print_log(f"過去{self.sell_term}足の最安値{signal['price']}円を、直近の価格が{data['settled'][judge_price['SELL']]}でブレイクしました。")
+                self.print_log(f"過去{self.sell_term}足の最安値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['SELL']]}でブレイクしました。")
                 self.print_log(f"{data['settled']['close_price']}円あたりで成り行き注文を出してポジションを決済します。")
 
                 # Order
@@ -362,7 +362,7 @@ class Batman1G:
 
         if flag["position"]["side"] == "SELL":
             if signal["side"] == "BUY":
-                self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][judge_price['BUY']]}でブレイクしました。")
+                self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['BUY']]}でブレイクしました。")
                 self.print_log(f"{data['settled']['close_price']}円あたりで成り行き注文を出してポジションを決済します。")
 
                 # Order
