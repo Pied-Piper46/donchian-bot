@@ -14,10 +14,9 @@ class Batman1G:
     SECRET_FILE = "secrets.json"
     CHART_API = "cryptowatch"
 
-    def __init__(self, chart_sec, chart_API, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config):
+    def __init__(self, chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config):
 
         self.chart_sec = chart_sec
-        self.chart_API = chart_API # cryptowatch / cryptocompare
 
         self.buy_term = buy_term
         self.sell_term = sell_term

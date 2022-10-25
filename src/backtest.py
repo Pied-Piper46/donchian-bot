@@ -5,7 +5,6 @@ from cls import Backtest
 def main():
 
     chart_sec = 3600
-    chart_API = "cryptowatch"
 
     buy_term = 30
     sell_term = 30
@@ -40,7 +39,7 @@ def main():
     log_config = "ON"
     line_config = "OFF" # バックテストのため固定
 
-    bot = Backtest.Backtest1G(chart_sec, chart_API, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT)
+    bot = Backtest.Backtest1G(chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT)
 
     price = bot.get_price(bot.chart_sec, after=1451606400)
     last_data = []
