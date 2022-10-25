@@ -534,7 +534,7 @@ class Batman1G:
 
         flag["position"]["stop"] = round(flag["position"]["stop"] - (moved_range + flag["position"]["stop"]) * flag["position"]["stop-AF"])
 
-        flag["position"]["stop-AF"] = round(flag["position"]["stop-AF"] + stop_AF_add, 2)
+        flag["position"]["stop-AF"] = round(flag["position"]["stop-AF"] + self.stop_AF_add, 2)
         if flag["position"]["stop-AF"] >= self.stop_AF_max:
             flag["position"]["stop-AF"] = self.stop_AF_max
 
