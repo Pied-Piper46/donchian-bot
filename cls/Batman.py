@@ -12,6 +12,7 @@ class Batman1G:
     MIN_LOT = 0.01
     LOG_DIR = "bot-log"
     SECRET_FILE = "secrets.json"
+    CHART_API = "cryptowatch"
 
     def __init__(self, chart_sec, chart_API, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config):
 
@@ -90,9 +91,10 @@ class Batman1G:
 
 
     # ----- Main Functions ----- #
-    def get_price(self, min, before=0, after=0):
+    @classmethod
+    def get_price(cls, min, before=0, after=0):
 
-        if self.chart_API == "cryptowatch":
+        if cls.CHART_API == "cryptowatch":
             price = []
             params = {"periods": min}
             if before != 0:
@@ -117,10 +119,9 @@ class Batman1G:
                 return price
 
             else:
-                self.print_log("データが存在しません。")
                 return None
 
-        if self.chart_API == "cryptocompare":
+        if cls.CHART_API == "cryptocompare":
             price = []
             params = {"fsym": "BTC", "tsym": "JPY", "e": "bitflyerfx", "limit": 2000}
 
@@ -140,7 +141,6 @@ class Batman1G:
                 return price
 
             else:
-                self.print_log("データが存在しません。")
                 return None
 
     
