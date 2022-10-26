@@ -1,8 +1,11 @@
 import os
+import json
+import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from scipy import stats
+from datetime import datetime
+import matplotlib.pyplot as plt
 
 from .Batman import Batman1G
 
@@ -19,7 +22,7 @@ class Backtest1G(Batman1G):
         self.slippage = slippage
         self.TEST_MODE_LOT = TEST_MODE_LOT
 
-        self.flag = { # TODO: インスタンス変数にする必要あるのか
+        self.flag = {
             "position": {
                 "exist": False,
                 "side": "",
@@ -54,6 +57,38 @@ class Backtest1G(Batman1G):
         }
 
     
+    @classmethod
+    def get_price_from_file(cls, data_file, min, start_time=None, end_time=None):
+        
+        f = open(data_file, "r", encoding="utf-8")
+        data = json.load(f)
+
+        start_unix = 0
+        end_unix = 9999999999
+
+        if start_time:
+            start_time = datetime.strptime(start_time, "%Y/%m/%d %H:%M")
+            start_unix = int(start_time.timestamp())
+        if end_time:
+            end_time = datetime.strptime(end_time, "%Y/%m/%d %H:%M")
+            end_unix = int(end_time.timestamp())
+
+        price = []
+        for i in data["result"][str(min)]:
+            if i[0] >= start_unix and i[0] <= end_unix:
+                if i[1] != 0 and i[2] != 0 and i[3] != 0 and i[4] != 0:
+                    price.append({
+                        "close_time": i[0],
+                        "close_time_dt": datetime.fromtimestamp(i[0]).strftime("%Y/%m/%d %H:%M"),
+                        "open_price": i[1],
+                        "high_price": i[2],
+                        "low_price": i[3],
+                        "close_price": i[4]
+                    })
+
+        return price
+
+
     def entry_signal(self, data, last_data, flag):
 
         signal = self.donchian(data, last_data)

@@ -127,3 +127,45 @@ Problem6:
 # value = "a"
 def problem6():
     print(value)
+
+
+"""
+Function1:
+欠損価格データの確認
+"""
+
+def func1():
+
+    import os, sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from cls import Backtest
+
+    chart_sec = 60
+    data_file = "data.json"
+
+    start_period = "2022/06/06 00:00"
+    end_period = "2022/06/09 00:00"
+
+    price = Backtest.Backtest1G.get_price_from_file(data_file, chart_sec, start_period, end_period)
+
+    print("-------------------------------")
+    print("Periods")
+    print("Start time : " + str(price[0]["close_time_dt"]))
+    print("End time : " + str(price[-1]["close_time_dt"]))
+    print("validate with " + str(len(price)) + "candle sticks")
+    print("-------------------------------")
+
+    # pprint(price[:500])
+
+    num = int(datetime.strptime(start_period, "%Y/%m/%d %H:%M").timestamp())
+    for i in range(len(price)):
+        match = False
+        for p in price:
+            if num == p["close_time"]:
+                match = True
+        if match == False:
+            print(f"{datetime.fromtimestamp(num)}: not exsit.")
+
+        num += chart_sec
+
+# func1()
