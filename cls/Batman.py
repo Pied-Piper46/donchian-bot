@@ -239,8 +239,8 @@ class Batman1G:
                 self.print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。")
                 return flag
 
-            log, stop, flag = self.calculate_lot(last_data, data, flag)
-            if lot >= MIN_LOT:
+            lot, stop, flag = self.calculate_lot(last_data, data, flag)
+            if lot >= self.MIN_LOT:
                 self.print_log(f"{data['settled']['close_price']}円あたりに{lot}BTCで買いの成り行き注文を出します。")
 
                 # Order
@@ -262,7 +262,7 @@ class Batman1G:
                 self.print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。")
                 return flag
 
-            log, stop, flag = self.calculate_lot(last_data, data, flag)
+            lot, stop, flag = self.calculate_lot(last_data, data, flag)
             if lot >= self.MIN_LOT:
                 self.print_log(f"{data['settled']['close_price']}円あたりに{lot}BTCで売りの成り行き注文を出します。")
 
@@ -410,9 +410,9 @@ class Batman1G:
         if self.filter_VER == "B":
             if len(last_data) < self.MA_term:
                 return True
-            if self.calculate_MA(MA_term) > self.calculate_MA(self.MA_term, -1) and signal["side"] == "BUY":
+            if self.calculate_MA(self.MA_term) > self.calculate_MA(self.MA_term, -1) and signal["side"] == "BUY":
                 return True
-            if self.calculate_MA(MA_term) < self.calculate_MA(self.MA_term, -1) and signal["side"] == "SELL":
+            if self.calculate_MA(self.MA_term) < self.calculate_MA(self.MA_term, -1) and signal["side"] == "SELL":
                 return True
         
         return False
@@ -435,7 +435,7 @@ class Batman1G:
         if flag["add-position"]["count"] == 0:
 
             volatility = self.calculate_volatility(last_data)
-            stop = stop_range * volatility
+            stop = self.stop_range * volatility
             calc_lot = np.floor(balance * self.trade_risk / stop * 100) / 100
 
             flag["add-position"]["unit-size"] = np.floor(calc_lot / self.entry_times * (1 / self.MIN_LOT)) / (1 / self.MIN_LOT)
@@ -456,7 +456,7 @@ class Batman1G:
         return lot, stop, flag
 
 
-    def add_position(self, data, flag):
+    def add_position(self, data, last_data, flag):
 
         if flag["position"]["exist"] == False:
             return flag

@@ -54,7 +54,7 @@ def main():
         if bot.flag["position"]["exist"]:
             bot.flag = bot.stop_position(data, bot.flag)
             bot.flag = bot.close_position(data, last_data, bot.flag)
-            bot.flag = bot.add_position(data, bot.flag)
+            bot.flag = bot.add_position(data, last_data, bot.flag)
         else:
             bot.flag = bot.find_unexpected_pos(last_data, bot.flag)
             bot.flag = bot.entry_signal(data, last_data, bot.flag)
@@ -68,4 +68,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
