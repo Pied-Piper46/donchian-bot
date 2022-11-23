@@ -5,9 +5,9 @@ from cls import BacktestMulti
 
 def main():
 
-    chart_sec_list = [900, 1800, 3600, 7200]
+    chart_sec_list = [1800, 3600, 7200]
 
-    buy_term_list = [10, 15, 20, 25, 30, 50]
+    buy_term_list = [10, 20, 30]
     judge_price_list = [
         {"BUY": "close_price", "SELL": "close_price"},
         {"BUY": "high_price", "SELL": "low_price"}
@@ -15,19 +15,19 @@ def main():
 
     TEST_MODE_LOT = "adjustable"
 
-    volatility_term_list = [5, 10, 15, 20, 30]
-    stop_range_list = [2, 3, 4]
+    volatility_term_list = [5, 10, 20, 30]
+    stop_range_list = [2, 3]
     trade_risk = 0.04
     levarage = 2
     start_funds = 300000
 
-    entry_times_list = [1, 2, 3, 4]
+    entry_times_list = [1, 2, 3]
     entry_range_list = [0.5, 1]
 
     trailing_config = "TRAILING"
-    stop_AF_list = [0.02, 0.03, 0.04]
-    stop_AF_add_list = [0.02, 0.03, 0.04]
-    stop_AF_max_list = [0.2, 0.3, 0.4]
+    stop_AF_list = [0.02, 0.03]
+    stop_AF_add_list = [0.02, 0.03]
+    stop_AF_max_list = [0.2, 0.3]
 
     slippage = 0.0005
 
