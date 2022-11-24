@@ -3,12 +3,9 @@
 .DS_Store
 __pycache__
 system-log/
-trade-log/
+backtest-log/
+bot-log/
 .vscode
-sample.py
-sample.txt
 RuinTable.csv
-backtest.csv
 test.py
 secrets.json
-sample_bot.log
