@@ -2,6 +2,7 @@ import os
 import json
 import ccxt
 import time
+import inspect
 import requests
 import numpy as np
 from datetime import datetime
@@ -14,12 +15,12 @@ class Batman1G:
     SECRET_FILE = "secrets.json"
     CHART_API = "cryptowatch"
 
-    def __init__(self, chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config):
+    def __init__(self, chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config):
 
         self.chart_sec = chart_sec
 
-        self.buy_term = buy_term
-        self.sell_term = sell_term
+        self.entry_term = entry_term
+        self.exit_term = exit_term
         self.judge_price = judge_price # high_price / close_price # low_price / close_price
 
         self.volatility_term = volatility_term
@@ -78,9 +79,9 @@ class Batman1G:
         }
 
         if self.filter_VER == "OFF":
-            self.need_term = max(self.buy_term, self.sell_term, self.volatility_term)
+            self.need_term = max(self.entry_term, self.exit_term, self.volatility_term)
         else:
-            self.need_term = max(self.buy_term, self.sell_term, self.volatility_term, self.MA_term)
+            self.need_term = max(self.entry_term, self.exit_term, self.volatility_term, self.MA_term)
 
         self.secrets = self.get_secrets(self.SECRET_FILE)
         self.bitflyer = ccxt.bitflyer()
@@ -145,7 +146,7 @@ class Batman1G:
     
     def get_realtime_price(self, min):
 
-        if self.chart_API == "cryptowatch":
+        if self.CHART_API == "cryptowatch":
             params = {"periods": min}
             while True:
                 try:
@@ -174,7 +175,7 @@ class Batman1G:
                     self.print_log(f"{self.wait}秒待機してやり直します。")
                     time.sleep(self.wait)
 
-        if self.chart_API == "cryptocompare": # 1時間足のみ対応
+        if self.CHART_API == "cryptocompare": # 1時間足のみ対応
             params = {"fsym": "BTC", "tsym": "JPY", "e": "bitflyerfx"}
 
             while True:
@@ -214,11 +215,19 @@ class Batman1G:
 
     def donchian(self, data, last_data):
 
-        highest = max(i["high_price"] for i in last_data[(-1*self.buy_term): ])
+        print(inspect.stack()[1].function)
+        if inspect.stack()[1].function == "entry_signal":
+            term = self.entry_term
+        elif inspect.stack()[1].function == "close_position":
+            term = self.exit_term
+        else:
+            pass
+
+        highest = max(i["high_price"] for i in last_data[(-1*term): ])
         if data[self.judge_price["BUY"]] > highest:
             return {"side": "BUY", "price": highest}
 
-        lowest = min(i["low_price"] for i in last_data[(-1*self.sell_term): ])
+        lowest = min(i["low_price"] for i in last_data[(-1*term): ])
         if data[self.judge_price["SELL"]] < lowest:
             return {"side": "SELL", "price": lowest}
 
@@ -233,14 +242,14 @@ class Batman1G:
         signal = self.donchian(data["settled"], last_data)
 
         if signal["side"] == "BUY":
-            self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['BUY']]}円でブレイクしました。")
+            self.print_log(f"過去{self.entry_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['BUY']]}円でブレイクしました。")
 
             if self.filter(signal, data["settled"], last_data) == False:
                 self.print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。")
                 return flag
 
-            log, stop, flag = self.calculate_lot(last_data, data, flag)
-            if lot >= MIN_LOT:
+            lot, stop, flag = self.calculate_lot(last_data, data, flag)
+            if lot >= self.MIN_LOT:
                 self.print_log(f"{data['settled']['close_price']}円あたりに{lot}BTCで買いの成り行き注文を出します。")
 
                 # Order
@@ -256,13 +265,13 @@ class Batman1G:
                 self.print_log(f"注文可能枚数{lot}が、最低注文単位に満たなかったので注文を見送ります。")
 
         if signal["side"] == "SELL":
-            self.print_log(f"過去{self.sell_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['SELL']]}円でブレイクしました。")
+            self.print_log(f"過去{self.entry_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['SELL']]}円でブレイクしました。")
 
             if self.filter(signal, data["settled"], last_data) == False:
                 self.print_log("フィルターのエントリー条件を満たさなかったため、エントリーしません。")
                 return flag
 
-            log, stop, flag = self.calculate_lot(last_data, data, flag)
+            lot, stop, flag = self.calculate_lot(last_data, data, flag)
             if lot >= self.MIN_LOT:
                 self.print_log(f"{data['settled']['close_price']}円あたりに{lot}BTCで売りの成り行き注文を出します。")
 
@@ -329,7 +338,7 @@ class Batman1G:
 
         if flag["position"]["side"] == "BUY":
             if signal["side"] == "SELL":
-                self.print_log(f"過去{self.sell_term}足の最安値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['SELL']]}でブレイクしました。")
+                self.print_log(f"過去{self.exit_term}足の最安値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['SELL']]}でブレイクしました。")
                 self.print_log(f"{data['settled']['close_price']}円あたりで成り行き注文を出してポジションを決済します。")
 
                 # Order
@@ -361,7 +370,7 @@ class Batman1G:
 
         if flag["position"]["side"] == "SELL":
             if signal["side"] == "BUY":
-                self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['BUY']]}でブレイクしました。")
+                self.print_log(f"過去{self.exit_term}足の最高値{signal['price']}円を、直近の価格が{data['settled'][self.judge_price['BUY']]}でブレイクしました。")
                 self.print_log(f"{data['settled']['close_price']}円あたりで成り行き注文を出してポジションを決済します。")
 
                 # Order
@@ -410,9 +419,9 @@ class Batman1G:
         if self.filter_VER == "B":
             if len(last_data) < self.MA_term:
                 return True
-            if self.calculate_MA(MA_term) > self.calculate_MA(self.MA_term, -1) and signal["side"] == "BUY":
+            if self.calculate_MA(self.MA_term) > self.calculate_MA(self.MA_term, -1) and signal["side"] == "BUY":
                 return True
-            if self.calculate_MA(MA_term) < self.calculate_MA(self.MA_term, -1) and signal["side"] == "SELL":
+            if self.calculate_MA(self.MA_term) < self.calculate_MA(self.MA_term, -1) and signal["side"] == "SELL":
                 return True
         
         return False
@@ -435,7 +444,7 @@ class Batman1G:
         if flag["add-position"]["count"] == 0:
 
             volatility = self.calculate_volatility(last_data)
-            stop = stop_range * volatility
+            stop = self.stop_range * volatility
             calc_lot = np.floor(balance * self.trade_risk / stop * 100) / 100
 
             flag["add-position"]["unit-size"] = np.floor(calc_lot / self.entry_times * (1 / self.MIN_LOT)) / (1 / self.MIN_LOT)
@@ -456,7 +465,7 @@ class Batman1G:
         return lot, stop, flag
 
 
-    def add_position(self, data, flag):
+    def add_position(self, data, last_data, flag):
 
         if flag["position"]["exist"] == False:
             return flag
