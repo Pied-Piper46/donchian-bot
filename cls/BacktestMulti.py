@@ -3,16 +3,16 @@ from .Backtest import Backtest1G
 
 class BacktestMulti1G(Backtest1G):
 
-    def __init__(self, chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT):
-        super().__init__(chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT)
+    def __init__(self, chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT):
+        super().__init__(chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT)
 
     def backtest(self, flag):
 
         # 使用パラメータ
         params = {
             "chart_sec": self.chart_sec,
-            "buy_term": self.buy_term,
-            "sell_term": self.sell_term,
+            "entry_term": self.entry_term,
+            "exit_term": self.exit_term,
             "judge_price": self.judge_price,
             "TEST_MODE_LOT": self.TEST_MODE_LOT,
             "volatility_term": self.volatility_term,

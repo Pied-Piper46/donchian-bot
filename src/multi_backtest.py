@@ -5,23 +5,24 @@ from cls import BacktestMulti
 
 def main():
 
-    chart_sec_list = [1800, 3600, 7200]
+    chart_sec_list = [7200]
 
-    buy_term_list = [10, 20, 30]
+    entry_term_list = [20, 30,40, 50]
+    exit_term_list = [10, 20, 30, 40]
     judge_price_list = [
         {"BUY": "close_price", "SELL": "close_price"},
-        {"BUY": "high_price", "SELL": "low_price"}
+        # {"BUY": "high_price", "SELL": "low_price"}
     ]
 
     TEST_MODE_LOT = "adjustable"
 
-    volatility_term_list = [5, 10, 20, 30]
+    volatility_term_list = [10, 20, 30]
     stop_range_list = [2, 3]
     trade_risk = 0.04
     levarage = 2
     start_funds = 300000
 
-    entry_times_list = [1, 2, 3]
+    entry_times_list = [2, 3]
     entry_range_list = [0.5, 1]
 
     trailing_config = "TRAILING"
@@ -39,9 +40,10 @@ def main():
     log_config = "OFF"
     line_config = "OFF"
 
-    combinations = [(chart_sec, buy_term, judge_price, volatility_term, stop_range, entry_times, entry_range, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term)
+    combinations = [(chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, entry_times, entry_range, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term)
         for chart_sec in chart_sec_list
-        for buy_term in buy_term_list
+        for entry_term in entry_term_list
+        for exit_term in exit_term_list
         for judge_price in judge_price_list
         for volatility_term in volatility_term_list
         for stop_range in stop_range_list
@@ -61,9 +63,9 @@ def main():
         time.sleep(60)
 
     # Main
-    for chart_sec, buy_term, judge_price, volatility_term, stop_range, entry_times, entry_range, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term in combinations:
+    for chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, entry_times, entry_range, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term in combinations:
 
-        bot = BacktestMulti.BacktestMulti1G(chart_sec, buy_term, buy_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT)
+        bot = BacktestMulti.BacktestMulti1G(chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT)
 
         price = price_list[chart_sec]
         last_data = []

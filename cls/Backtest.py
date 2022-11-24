@@ -14,9 +14,9 @@ class Backtest1G(Batman1G):
     LOG_DIR = "backtest-log"
     SUMMARY_CSV = LOG_DIR + "/batman1G.csv"
 
-    def __init__(self, chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT):
+    def __init__(self, chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config, start_funds, slippage, TEST_MODE_LOT):
 
-        super().__init__(chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config)
+        super().__init__(chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config)
 
         self.start_funds = start_funds
         self.slippage = slippage
@@ -95,7 +95,7 @@ class Backtest1G(Batman1G):
 
         if signal["side"] == "BUY":
             self.print_log(f"--------------------【エントリー判定】entry_signal() --------------------")
-            self.print_log(f"【買】過去{self.buy_term}足の最高値{signal['price']}を直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
+            self.print_log(f"【買】過去{self.entry_term}足の最高値{signal['price']}を直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
 
             flag = self.filter(signal, data, last_data ,flag)
 
@@ -114,7 +114,7 @@ class Backtest1G(Batman1G):
 
         if signal["side"] == "SELL":
             self.print_log(f"--------------------【エントリー判定】entry_signal() --------------------")
-            self.print_log(f"【売】過去{self.sell_term}足の最安値{signal['price']}を直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
+            self.print_log(f"【売】過去{self.entry_term}足の最安値{signal['price']}を直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
 
             flag = self.filter(signal, data, last_data, flag)
 
@@ -323,7 +323,7 @@ class Backtest1G(Batman1G):
         if flag["position"]["side"] == "BUY":
             if signal["side"] == "SELL":
                 self.print_log(f"--------------------【クローズ判定】close_position() --------------------")
-                self.print_log(f"過去{self.sell_term}足の最安値{signal['price']}を直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
+                self.print_log(f"過去{self.exit_term}足の最安値{signal['price']}を直近の価格が{data[self.judge_price['SELL']]}円でブレイクしました。")
                 self.print_log("成り行き注文を出してポジションを決済します。")
 
                 self.records(flag, data, data["close_price"])
@@ -353,7 +353,7 @@ class Backtest1G(Batman1G):
         if flag["position"]["side"] == "SELL":
             if signal["side"] == "BUY":
                 self.print_log(f"--------------------【クローズ判定】close_position() --------------------")
-                self.print_log(f"過去{self.buy_term}足の最高値{signal['price']}を直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
+                self.print_log(f"過去{self.exit_term}足の最高値{signal['price']}を直近の価格が{data[self.judge_price['BUY']]}円でブレイクしました。")
                 self.print_log("成り行き注文を出してポジションを決済します。")
 
                 self.records(flag, data, data["close_price"])
@@ -449,8 +449,8 @@ class Backtest1G(Batman1G):
         # 使用パラメータ
         params = {
             "chart_sec": self.chart_sec,
-            "buy_term": self.buy_term,
-            "sell_term": self.sell_term,
+            "entry_term": self.entry_term,
+            "exit_term": self.exit_term,
             "judge_price": self.judge_price,
             "TEST_MODE_LOT": self.TEST_MODE_LOT,
             "volatility_term": self.volatility_term,

@@ -7,8 +7,8 @@ def main():
 
     chart_sec = 300
 
-    buy_term = 30
-    sell_term = 30
+    entry_term = 30
+    exit_term = 30
     judge_price = {
         "BUY": "close_price",
         "SELL": "close_price"
@@ -35,7 +35,7 @@ def main():
     log_config = "ON"
     line_config = "ON"
 
-    bot = Batman.Batman1G(chart_sec, buy_term, sell_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config)
+    bot = Batman.Batman1G(chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config)
 
     bot.print_log(f"{bot.need_term}期間分のデータを準備中...")
     price = bot.get_price(bot.chart_sec)
