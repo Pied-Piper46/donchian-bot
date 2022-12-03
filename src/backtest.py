@@ -4,10 +4,10 @@ from cls import Backtest
 
 def main():
 
-    chart_sec = 3600
+    chart_sec = 7200
 
-    entry_term = 30
-    exit_term = 10
+    entry_term = 50
+    exit_term = 30
     judge_price = {
         "BUY": "close_price",
         "SELL": "close_price"
@@ -15,24 +15,24 @@ def main():
 
     TEST_MODE_LOT = "adjustable" # "fixed" / "adjustable"
 
-    volatility_term = 5
+    volatility_term = 30
     stop_range = 2
-    trade_risk = 0.03
+    trade_risk = 0.04
     levarage = 2
     start_funds = 300000
 
-    entry_times = 2
-    entry_range = 1
+    entry_times = 3
+    entry_range = 0.5
 
-    trailing_config = "ON"
-    stop_AF = 0.02
-    stop_AF_add = 0.02
+    trailing_config = "TRAILING"
+    stop_AF = 0.03
+    stop_AF_add = 0.03
     stop_AF_max = 0.2
 
     slippage = 0.0005
 
-    filter_VER = "A"
-    MA_term = 200
+    filter_VER = "B"
+    MA_term = 100
 
     wait = 0 # バックテストのため固定
 

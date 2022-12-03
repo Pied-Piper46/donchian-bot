@@ -31,7 +31,7 @@ class Batman1G:
         self.entry_times = entry_times
         self.entry_range = entry_range
 
-        self.trailing_config = trailing_config # "ON" / "OFF" / "TRAILING"
+        self.trailing_config = trailing_config # "OFF" / "TRAILING"
         self.stop_AF = stop_AF
         self.stop_AF_add = stop_AF_add
         self.stop_AF_max = stop_AF_max
@@ -215,7 +215,6 @@ class Batman1G:
 
     def donchian(self, data, last_data):
 
-        print(inspect.stack()[1].function)
         if inspect.stack()[1].function == "entry_signal":
             term = self.entry_term
         elif inspect.stack()[1].function == "close_position":
@@ -292,7 +291,7 @@ class Batman1G:
 
     def stop_position(self, data, flag):
 
-        if self.trailing_config == "ON":
+        if self.trailing_config == "TRAILING":
             flag = self.trail_stop(data["settled"], flag)
 
         if flag["position"]["side"] == "BUY":
