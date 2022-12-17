@@ -410,17 +410,17 @@ class Batman1G:
         if self.filter_VER == "A":
             if len(last_data) < self.MA_term:
                 return True
-            if data["close_price"] > self.calculate_MA(self.MA_term) and signal["side"] == "BUY":
+            if data["close_price"] > self.calculate_MA(self.MA_term, last_data) and signal["side"] == "BUY":
                 return True
-            if data["close_price"] < self.calculate_MA(self.MA_term) and signal["side"] == "SELL":
+            if data["close_price"] < self.calculate_MA(self.MA_term, last_data) and signal["side"] == "SELL":
                 return True
 
         if self.filter_VER == "B":
             if len(last_data) < self.MA_term:
                 return True
-            if self.calculate_MA(self.MA_term) > self.calculate_MA(self.MA_term, -1) and signal["side"] == "BUY":
+            if self.calculate_MA(self.MA_term, last_data) > self.calculate_MA(self.MA_term, last_data, -1) and signal["side"] == "BUY":
                 return True
-            if self.calculate_MA(self.MA_term) < self.calculate_MA(self.MA_term, -1) and signal["side"] == "SELL":
+            if self.calculate_MA(self.MA_term, last_data) < self.calculate_MA(self.MA_term, last_data, -1) and signal["side"] == "SELL":
                 return True
         
         return False
@@ -673,8 +673,8 @@ class Batman1G:
                 executions = self.bitflyer.private_get_getexecutions(params={"product_code": "FX_BTC_JPY"})
                 for exec in executions:
                     if exec["child_order_acceptance_id"] == id:
-                        size.append(exec["size"])
-                        price.append(exec["price"])
+                        size.append(float(exec["size"]))
+                        price.append(float(exec["price"]))
 
                 if round(sum(size), 2) != lot:
                     time.sleep(20)
@@ -719,8 +719,8 @@ class Batman1G:
                     self.print_log("現在ポジションは存在しません。")
                     return 0, 0, None
                 for pos in positions:
-                    size.append(pos["size"])
-                    price.append(pos["price"])
+                    size.append(float(pos["size"]))
+                    price.append(float(pos["price"]))
                     side = pos["side"]
 
                 average_price = round(sum(price[i] * size[i] for i in range(len(price))) / sum(size))
