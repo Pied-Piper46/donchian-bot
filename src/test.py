@@ -228,8 +228,10 @@ def unit_test():
     # data = bot.get_realtime_price(bot.chart_sec)
 
     # test data
-    data = {'settled': {'close_time': 1671249600, 'open_price': 2275455, 'high_price': 2281561, 'low_price': 2265038, 'close_price': 2507479}, 'forming': {'close_time': 1671256800, 'open_price': 2277481, 'high_price': 2280614, 'low_price': 2234812, 'close_price': 2306152}}
+    # data = {'settled': {'close_time': 1671249600, 'open_price': 2275455, 'high_price': 2281561, 'low_price': 2265038, 'close_price': 2507479}, 'forming': {'close_time': 1671256800, 'open_price': 2277481, 'high_price': 2280614, 'low_price': 2234812, 'close_price': 2306152}}
 
-    bot.find_unexpected_pos(last_data, bot.flag)
+    # bot.find_unexpected_pos(last_data, bot.flag)
+
+    print(bot.bitflyer_collateral())
     
 # unit_test()

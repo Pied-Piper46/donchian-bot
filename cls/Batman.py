@@ -446,7 +446,7 @@ class Batman1G:
             stop = self.stop_range * volatility
             calc_lot = np.floor(balance * self.trade_risk / stop * 100) / 100
 
-            flag["add-position"]["unit-size"] = np.floor(calc_lot / self.entry_times * (1 / self.MIN_LOT)) / (1 / self.MIN_LOT)
+            flag["add-position"]["unit-size"] = np.floor(calc_lot / self.entry_times * 100) / 100
             flag["add-position"]["unit-range"] = round(volatility * self.entry_range)
             flag["add-position"]["stop"] = stop
             flag["position"]["ATR"] = round(volatility)

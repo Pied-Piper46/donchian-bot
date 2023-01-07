@@ -16,7 +16,7 @@ def main():
 
     volatility_term = 30
     stop_range = 2
-    trade_risk = 0.04
+    trade_risk = 0.03
     levarage = 2
 
     entry_times = 3
