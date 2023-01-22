@@ -5,34 +5,34 @@ from cls import Batman
 
 def main():
 
-    chart_sec = 300
+    chart_sec = 7200
 
-    entry_term = 30
+    entry_term = 50
     exit_term = 30
     judge_price = {
         "BUY": "close_price",
         "SELL": "close_price"
     }
 
-    volatility_term = 5
+    volatility_term = 30
     stop_range = 2
     trade_risk = 0.03
     levarage = 2
 
-    entry_times = 2
-    entry_range = 1
+    entry_times = 3
+    entry_range = 0.5
 
-    trailing_config = "ON"
-    stop_AF = 0.02
-    stop_AF_add = 0.02
+    trailing_config = "TRAILING"
+    stop_AF = 0.03
+    stop_AF_add = 0.03
     stop_AF_max = 0.2
 
-    filter_VER = "OFF"
-    MA_term = 200
+    filter_VER = "B"
+    MA_term = 100
 
     wait = 180
 
-    log_config = "ON"
+    log_config = "OFF"
     line_config = "ON"
 
     bot = Batman.Batman1G(chart_sec, entry_term, exit_term, judge_price, volatility_term, stop_range, trade_risk, levarage, entry_times, entry_range, trailing_config, stop_AF, stop_AF_add, stop_AF_max, filter_VER, MA_term, wait, log_config, line_config)
