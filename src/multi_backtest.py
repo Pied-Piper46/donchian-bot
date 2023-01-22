@@ -16,8 +16,8 @@ def main():
 
     TEST_MODE_LOT = "adjustable"
 
-    volatility_term_list = [10, 20, 30, 50]
-    stop_range_list = [2]
+    volatility_term_list = [20, 30]
+    stop_range_list = [1, 1.5, 2]
     trade_risk = 0.04
     levarage = 2
     start_funds = 300000
@@ -26,9 +26,9 @@ def main():
     entry_range_list = [0.5]
 
     trailing_config = "TRAILING"
-    stop_AF_list = [0.03]
-    stop_AF_add_list = [0.03]
-    stop_AF_max_list = [0.2]
+    stop_AF_list = [0.03, 0.04, 0.05]
+    stop_AF_add_list = [0.03, 0.04, 0.05, 0.06]
+    stop_AF_max_list = [0.2, 0.3, 0.4]
 
     slippage = 0.0005
 

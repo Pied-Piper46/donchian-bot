@@ -14,16 +14,16 @@ def main():
         "SELL": "close_price"
     }
 
-    volatility_term = 30
-    stop_range = 2
-    trade_risk = 0.03
+    volatility_term = 20
+    stop_range = 1.5
+    trade_risk = 0.04
     levarage = 2
 
     entry_times = 3
     entry_range = 0.5
 
     trailing_config = "TRAILING"
-    stop_AF = 0.03
+    stop_AF = 0.04
     stop_AF_add = 0.03
     stop_AF_max = 0.2
 
