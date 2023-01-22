@@ -453,12 +453,12 @@ class Batman1G:
 
             self.print_log(f"現在のアカウント残高は{balance}円です。")
             self.print_log(f"許容リスクから購入できる枚数は最大{calc_lot}BTCまでです。")
-            self.print_log(f"{self.entry_times}回に分けて{flag['add-position']['unit-size']}BTCずつ注文します。")
+            self.print_log(f"{self.entry_times}回に分けて{flag['add-position']['unit-size']}BTC(UnitSize) - 0.01BTCずつ注文します。")
 
         stop = flag["add-position"]["stop"]
 
         able_lot = np.floor(balance * self.levarage / data["forming"]["close_price"] * 100) / 100
-        lot = min(able_lot, flag["add-position"]["unit-size"])
+        lot = min(able_lot, flag["add-position"]["unit-size"]) - 0.01
 
         self.print_log(f"証拠金から購入できる枚数は最大{able_lot}BTCまでです。")
         return lot, stop, flag
