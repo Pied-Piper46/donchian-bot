@@ -716,7 +716,7 @@ class Batman1G:
                 price = []
                 positions = self.bitflyer.private_get_getpositions(params={"product_code": "FX_BTC_JPY"})
                 if not positions:
-                    self.print_log("現在ポジションは存在しません。")
+                    # self.print_log("現在ポジションは存在しません。")
                     return 0, 0, None
                 for pos in positions:
                     size.append(float(pos["size"]))
