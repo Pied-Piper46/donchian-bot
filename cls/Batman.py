@@ -458,7 +458,7 @@ class Batman1G:
         stop = flag["add-position"]["stop"]
 
         able_lot = np.floor(balance * self.levarage / data["forming"]["close_price"] * 100) / 100
-        lot = min(able_lot, flag["add-position"]["unit-size"]) - 0.01
+        lot =round(min(able_lot, flag["add-position"]["unit-size"]) - 0.01, 2)
 
         self.print_log(f"証拠金から購入できる枚数は最大{able_lot}BTCまでです。")
         return lot, stop, flag
